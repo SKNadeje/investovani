@@ -61,6 +61,11 @@
      "name": "Dynamický fond",
      "pct": 30.46,
      "value": 47721.83
+    },
+    {
+     "name": "Převedeno z Generali",
+     "pct": null,
+     "value": 204117.86
     }
    ]
   },
@@ -384,7 +389,7 @@
  "_napoveda": "Soubor s tvými daty. Hodnoty uprav přímo tady (GitHub: tužka Edit). value = aktuální hodnota v Kč, deposits = vloženo, flows = jednotlivé vklady, hist = měsíční snapshoty {date,value,deposits}, exclude:true = mimo Celkem.",
  "tax": {
   "dpsMonthly": 1700,
-  "dipYear": 3706
+  "dipMonthly": 0
  },
  "inflation": {
   "2020": 3.2,
