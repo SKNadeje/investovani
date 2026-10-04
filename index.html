@@ -42,6 +42,8 @@ dialog::backdrop{background:#0009}
 .kpi{border:1px solid var(--line);border-radius:8px;padding:10px 12px}.kpi span{display:block;color:var(--mute);font-size:.82rem}.kpi b{font-size:1.1rem}
 .stack{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:6px 0}
 .leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;color:var(--mute)}
+.ctl{display:flex;flex-wrap:wrap;gap:12px 20px;margin-bottom:8px}.ctl label{display:flex;flex-direction:column;gap:4px;font-size:.88rem;color:var(--mute)}
+input,select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
 footer{margin-top:28px;color:var(--mute);font-size:.85rem}
 </style>
 </head>
@@ -68,58 +70,47 @@ footer{margin-top:28px;color:var(--mute);font-size:.85rem}
     <div class="wrap" style="margin-top:8px"><table id="ggTable"></table></div>
   </section>
 
-  <footer>Zlato a stříbro se oceňuje podle spotové ceny (výkup u obchodníka bývá nižší). Řádek 2026* je odhad z průměrných cen. Data uprav v sekci DATA v souboru <code>index.html</code>.</footer>
+  <section class="card" style="margin-top:16px">
+    <h2>Hodnota kovů od roku 2020</h2>
+    <div id="mhWrap">
+      <div class="chart"><canvas id="mhChart"></canvas></div>
+      <p class="hint">Odhad: množství mezi ročními výpisy je dopočtené lineárně, ceny jsou spotové, ne výkupní.</p>
+      <h2 style="margin-top:18px">Poměr zlato / stříbro</h2>
+      <div class="chart" style="height:220px"><canvas id="ratioChart"></canvas></div>
+      <p class="hint" id="ratioNote"></p>
+    </div>
+  </section>
+  <section class="card" style="margin-top:16px">
+    <h2>Roční výnos a inflace (zlato a stříbro)</h2>
+    <div class="kpis" id="yieldK"></div><p class="hint" id="yieldNote"></p>
+  </section>
+  <section class="card" style="margin-top:16px">
+    <h2>Projekce</h2>
+    <div class="ctl">
+      <label>Měsíční vklad (Kč) <input type="number" id="pm" min="0" step="500"></label>
+      <label>Růst cen kovů za rok: <b id="pgv">0 %</b> <input type="range" id="pg" min="-10" max="20" step="1" value="0"></label>
+    </div>
+    <div class="kpis" id="projK"></div>
+    <div class="chart" style="height:260px"><canvas id="projChart"></canvas></div>
+    <p class="hint">Jen ilustrace, ne předpověď. Ceny kovů mohou růst i klesat.</p>
+  </section>
+  <section class="card" style="margin-top:16px">
+    <h2>Penzijko a DIP: státní příspěvek a odpočet</h2>
+    <div class="ctl">
+      <label>Měsíční vklad do penzijka (Kč) <input type="number" id="tm" min="0" step="100"></label>
+      <label>Roční vklad do DIP (Kč) <input type="number" id="td" min="0" step="1000"></label>
+      <label>Sazba daně <select id="tr"><option value="15">15 %</option><option value="23">23 %</option></select></label>
+    </div>
+    <div class="kpis" id="taxK"></div><p class="hint" id="taxNote"></p>
+  </section>
+
+  <footer>Zlato a stříbro se oceňuje podle spotové ceny (výkup u obchodníka bývá nižší). Řádek 2026* je odhad z průměrných cen. Data uprav v souboru <code>data.json</code>.</footer>
 </main>
 <dialog id="dlg"><button class="x" id="dx">Zavřít</button><div id="dbody"></div></dialog>
 
 <script>
-/* ========= DATA — sem piš svoje čísla ========= */
+let DATA, HIST = null, EX = null, projChart = null;
 const OZ = 31.1035; // gramů v trojské unci
-const DATA = {
-  updated: "2026-10-04",
-  metals: [
-    { id:"gold",   name:"Zlato",   color:"#c9a227", symbol:"XAU", grams: 3*OZ + 12.75, avg:57646, per:OZ,   unit:"oz" },  // Ø cena za 1 oz
-    { id:"silver", name:"Stříbro", color:"#8a97a6", symbol:"XAG", grams: 1000 + 134.71, avg:29611, per:1000, unit:"kg" }  // Ø cena za 1 kg
-  ],
-  manual: [
-    { id:"edward", name:"Edward", color:"#2a8c82", value:343641.75, deposits:343641.75-40981.75, hist:[],
-      parts:[{l:"Vloženo",v:343641.75-40981.75,c:"#2a8c82"},{l:"Zisk",v:40981.75,c:"#1e7a52"}] },
-    /* Penzijko: výnos fondů je od převodu z Generali. Až doplníš value u fondů, spočítá se zisk z procent. */
-    { id:"penze", name:"Penzijko", color:"#5b5fa8", value:260630, deposits:null, hist:[],
-      funds:[{name:"Vyvážený fond",pct:18.50,value:null},{name:"Dynamický fond",pct:30.46,value:null}] },
-    { id:"dip", name:"DIP", color:"#c0623f", value:3694.71, deposits:3694.71+11.29, hist:[] },
-    /* Penzijko syna: exclude:true = nezapočítává se do Celkem */
-    { id:"syn", name:"Penzijko syn", color:"#9a8fd6", value:79363.56, deposits:41000+9420, exclude:true, hist:[],
-      parts:[{l:"Tvoje vklady",v:41000,c:"#9a8fd6"},{l:"Státní příspěvky",v:9420,c:"#6b9bd1"},{l:"Zhodnocení",v:28943.56,c:"#1e7a52"}] }
-  ],
-  /* Golden Gate — roční výpisy (stav k 31. 12.). pay = [datum, částka, poznámka, z toho poštovné] */
-  gg: {
-    goal: 500000,
-    years: [
-      { y:2020, saved:58801, total:58801, gold:OZ+5.21, silver:0, goldAvg:50360.65, silverAvg:null,
-        bonus:"Aktivované kredity: 2 352 (0,47 g zlata).",
-        pay:[["29. 9.",20000,"Startovací platba (do naspořeno se nepočítá)"],["29. 9.",2000],["29. 9.",49000,"Zlatý slitek 1 oz"],["7. 10.",3000,"",199],["6. 11.",3000],["7. 12.",2000]] },
-      { y:2021, saved:36600, total:95401, gold:OZ+9.73, silver:1002.69, goldAvg:49355.56, silverAvg:30517.77,
-        bonus:"Spotřebované kredity: 2 352. Aktivované: 1 464 (0,06 g zlata, 32,94 g stříbra).",
-        pay:[["8. 1.",3000],["5. 2.",1000],["8. 2.",2000],["8. 3.",5000],["18. 5.",6000],["8. 6.",8000],["24. 8.",2000],["7. 9.",3000],["6. 10.",3000],["5. 11.",3600,"Stříbrný slitek 1 kg"]] },
-      { y:2022, saved:25881, total:121282, gold:OZ+24.04, silver:1131.65, goldAvg:49452.06, silverAvg:29691.29,
-        bonus:"Spotřebované kredity: 1 464. Aktivované: 1 035 (3,07 g stříbra, 0,19 g zlata).",
-        pay:[["2. 3.",3000,"",119],["8. 3.",5000],["11. 3.",3000],["12. 4.",3000],["19. 5.",3000],["14. 6.",3000],["12. 7.",3000],["27. 12.",3000]] },
-      { y:2023, saved:19881, total:141163, gold:2*OZ+6.13, silver:1134.71, goldAvg:48954.88, silverAvg:29610.96,
-        bonus:"Spotřebované kredity: 1 830. Aktivované: 795 (0,18 g zlata).",
-        pay:[["17. 5.",3000],["15. 6.",3000],["17. 7.",3000],["17. 7.",2000,"Zlatý slitek 1 oz"],["15. 8.",3000,"",119],["15. 9.",3000],["16. 10.",3000]] },
-      { y:2024, saved:33000, total:174163, gold:2*OZ+23.38, silver:1134.71, goldAvg:51080.97, silverAvg:29610.96,
-        bonus:"Spotřebované kredity: 1 200. Aktivované: 1 320 (0,19 g zlata).",
-        pay:[["19. 2.",3000],["15. 3.",3000],["15. 4.",3000],["15. 5.",3000],["17. 6.",3000],["15. 7.",3000],["19. 8.",3000],["16. 9.",3000],["15. 10.",3000],["15. 11.",3000],["16. 12.",3000]] },
-      { y:2025, saved:35000, total:209163, gold:3*OZ+6.24, silver:1134.71, goldAvg:54854.18, silverAvg:29610.96,
-        bonus:"Spotřebované kredity: 120. Aktivované: 1 400 (0,12 g zlata).",
-        pay:[["16. 4.",20000,"Zlatý slitek 1 oz"],["17. 4.",3000],["19. 5.",3000],["17. 6.",3000],["17. 7.",3000],["22. 9.",3000]] }
-    ]
-  },
-  /* Měsíční snapshot celkové hodnoty: { date:"2026-11-01", total:123456 } */
-  history: []
-};
-/* ============================================== */
 
 const fmt = n => new Intl.NumberFormat("cs-CZ",{style:"currency",currency:"CZK",maximumFractionDigits:0}).format(n);
 const num = (n,d=1) => new Intl.NumberFormat("cs-CZ",{maximumFractionDigits:d}).format(n);
@@ -131,7 +122,7 @@ const css = getComputedStyle(document.documentElement);
 const V = k => css.getPropertyValue(k).trim();
 const kp = (l,v,c) => `<div class="kpi"><span>${l}</span><b class="${c||""}">${v}</b></div>`;
 
-async function getJSON(u){ const r = await fetch(u); if(!r.ok) throw 0; return r.json(); }
+async function getJSON(u,o){ const r = await fetch(u,o); if(!r.ok) throw 0; return r.json(); }
 async function loadPrices(){
   const usd = {};
   try { const j = await getJSON("https://xaus.com/api/v1/spot"); usd.XAU = +(j.xau && j.xau.price); usd.XAG = +j.silver_usd_oz; } catch(e){}
@@ -163,7 +154,7 @@ function build(p){
   });
   const man = DATA.manual.map(a=>{
     const it = { ...a };
-    if (a.funds && a.funds.every(f=>f.value!=null)) { it.value = a.funds.reduce((s,f)=>s+f.value,0); it.deposits = a.funds.reduce((s,f)=>s+f.value/(1+f.pct/100),0); }
+    it.flowsSum = (a.flows||[]).reduce((s,f)=>s+f.amount,0); if (it.deposits!=null) it.deposits += it.flowsSum;
     return it;
   });
   return metals.concat(man);
@@ -178,7 +169,9 @@ function detail(it){
     h += kp("Množství",num(it.grams,2)+" g ("+num(it.grams/OZ,3)+" oz)") + kp("Ø nákupní cena / "+it.unit,fmt(it.avg));
     if (it.spot) { const s = it.spot/OZ*it.per; h += kp("Spot / "+it.unit,fmt(s)) + kp("Spot oproti Ø nákupní",pct((s/it.avg-1)*100),cls(s-it.avg)); }
   }
-  (it.funds||[]).forEach(f=>{ h += kp(f.name+" (od převodu)",pct(f.pct),cls(f.pct)); if(f.value!=null) h += kp(f.name+": hodnota",fmt(f.value)); });
+  (it.funds||[]).forEach(f=>{ h += kp(f.name+" (od převodu)",pct(f.pct),cls(f.pct)); if(f.value!=null){ const g=f.value-f.value/(1+f.pct/100); h += kp(f.name+": hodnota",fmt(f.value)) + kp(f.name+": zisk od převodu",sg(g),cls(g)); } });
+  if (it.funds && it.funds.every(f=>f.value!=null)) { const rest = it.value-it.funds.reduce((s,f)=>s+f.value,0); if (Math.abs(rest)>1) h += kp("Mimo uvedené fondy",fmt(rest)); }
+  if (it.flowsSum) h += kp("Zapsané vklady",fmt(it.flowsSum));
   h += `</div>`;
   if (it.parts) {
     const t = it.parts.reduce((s,x)=>s+x.v,0);
@@ -248,7 +241,7 @@ function render(p){
 
   $("updated").textContent = "Ruční údaje k " + new Date(DATA.updated).toLocaleDateString("cs-CZ",{day:"numeric",month:"long",year:"numeric"});
   $("status").textContent = live
-    ? "Živé ceny (spot): zlato " + fmt(p.usd.XAU*p.fx) + " / oz, stříbro " + fmt((p.usd.XAG||0)*p.fx) + " / oz, kurz " + p.fx.toFixed(2).replace(".",",") + " Kč/USD."
+    ? "Živé ceny (spot): zlato " + fmt(p.usd.XAU*p.fx) + " / oz, stříbro " + fmt((p.usd.XAG||0)*p.fx) + " / oz, kurz " + p.fx.toFixed(2).replace(".",",") + " Kč/USD." + (p.usd.XAU>0 && p.usd.XAG>0 ? " Poměr zlato/stříbro " + num(p.usd.XAU/p.usd.XAG,1) + "." : "")
     : "Živé ceny se nepodařilo načíst, zlato a stříbro jsou zatím oceněny nákupní cenou.";
 
   const card = (it,total) => {
@@ -293,11 +286,122 @@ function render(p){
       {type:"line",label:"Celkem",data:ROWS.map(r=>r.total),borderColor:V("--ink"),pointRadius:3,tension:.2}]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},scales:sc(),plugins:{legend:{position:"bottom"},tooltip:tip},
       onClick:(e,els)=>{ if(els.length) showYear(els[0].index); }}});
+  extras();
 }
 
-setup();
-render(null);
-loadPrices().then(render).catch(()=>{});
+
+/* ============ rozšíření ============ */
+const T = (y,m,d) => Date.UTC(y,m-1,d);
+const iso = t => new Date(t).toISOString().slice(0,10);
+const YR = 31557600000;
+const mlab = t => new Date(t).toLocaleDateString("cs-CZ",{month:"numeric",year:"2-digit"});
+function priceAt(t){ const rows = HIST.daily, s = iso(t); let lo = 0, hi = rows.length-1, r = 0;
+  while (lo <= hi) { const m = (lo+hi)>>1; if (rows[m][0] <= s) { r = m; lo = m+1; } else hi = m-1; } return rows[r]; }
+function holdAt(a,t){ if (t <= a[0].t) return a[0];
+  for (let i = 0; i < a.length-1; i++) if (t <= a[i+1].t) { const k = (t-a[i].t)/(a[i+1].t-a[i].t);
+    return { g:a[i].g+(a[i+1].g-a[i].g)*k, s:a[i].s+(a[i+1].s-a[i].s)*k, c:a[i].c+(a[i+1].c-a[i].c)*k }; }
+  return a[a.length-1]; }
+function xirr(c){ const t0 = c[0].t, f = r => c.reduce((s,x)=>s+x.a/Math.pow(1+r,(x.t-t0)/YR),0);
+  let lo = -0.9, hi = 5; if (f(lo)*f(hi) > 0) return null;
+  for (let i = 0; i < 100; i++) { const m = (lo+hi)/2; if (f(lo)*f(m) <= 0) hi = m; else lo = m; } return (lo+hi)/2; }
+
+function extras(){
+  const gold = ITEMS.find(x=>x.id==="gold"), silv = ITEMS.find(x=>x.id==="silver");
+  EX = { costNow: gold.deposits+silv.deposits, valNow: gold.value+silv.value };
+  if (HIST && HIST.daily && HIST.daily.length) metalsHistory(gold,silv);
+  else $("mhWrap").innerHTML = `<p class="hint">Historické ceny zatím nejsou. V GitHubu spusť Actions → Deploy Pages → Run workflow, soubor <code>history.json</code> se vytvoří sám a každý den se obnoví.</p>`;
+  yieldBlock(); projUpdate(); taxUpdate();
+}
+
+function metalsHistory(gold,silv){
+  const now = Date.now();
+  const a = [{t:T(2020,9,29),g:OZ,s:0,c:51000}].concat(DATA.gg.years.map(y=>({t:T(y.y,12,31),g:y.gold,s:y.silver,c:y.total})));
+  a.push({t:now,g:gold.grams,s:silv.grams,c:EX.costNow});
+  const pts = []; for (let t = T(2020,10,1); t < now; ) { pts.push(t); const d = new Date(t); t = Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1); } pts.push(now);
+  const liveOK = P && P.fx && P.usd.XAU > 0 && P.usd.XAG > 0;
+  const rows = pts.map(t=>{ const h = holdAt(a,t), p = priceAt(t), live = t === now && liveOK;
+    const xau = live ? P.usd.XAU : p[1], xag = live ? P.usd.XAG : p[2], fx = live ? P.fx : p[3];
+    return { gv:h.g/OZ*xau*fx, sv:h.s/OZ*xag*fx, c:h.c }; });
+  const tt = {callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.parsed.y)}`,footer:i=>{ const x = i.filter(z=>z.dataset.stack==="v").reduce((s,z)=>s+z.parsed.y,0); return "Hodnota celkem: "+fmt(x); }}};
+  mk(charts,"mhChart",{ type:"line", data:{labels:pts.map(mlab),datasets:[
+      {label:"Zlato",data:rows.map(r=>r.gv),borderColor:DATA.metals[0].color,backgroundColor:DATA.metals[0].color+"aa",fill:true,pointRadius:0,borderWidth:1.5,stack:"v"},
+      {label:"Stříbro",data:rows.map(r=>r.sv),borderColor:DATA.metals[1].color,backgroundColor:DATA.metals[1].color+"aa",fill:true,pointRadius:0,borderWidth:1.5,stack:"v"},
+      {label:"Vloženo",data:rows.map(r=>r.c),borderColor:V("--ink"),borderDash:[5,4],pointRadius:0,borderWidth:1.5,fill:false,stack:"c"}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{stacked:true,grid:{color:V("--line")},border:{display:false},ticks:{callback:tick}}},
+      plugins:{legend:{position:"bottom"},tooltip:tt}}});
+  const d = HIST.daily.filter((_,i)=>i%5===0), ratio = d.map(r=>r[1]/r[2]), avg = ratio.reduce((s,x)=>s+x,0)/ratio.length;
+  mk(charts,"ratioChart",{ type:"line", data:{labels:d.map(r=>mlab(Date.parse(r[0]))),datasets:[
+      {label:"Zlato / stříbro",data:ratio,borderColor:V("--gold"),pointRadius:0,borderWidth:1.5},
+      {label:"Průměr",data:ratio.map(()=>avg),borderColor:V("--mute"),borderDash:[5,4],pointRadius:0,borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{grid:{color:V("--line")},border:{display:false}}},
+      plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${num(c.parsed.y,1)}`}}}}});
+  const now1 = ratio[ratio.length-1];
+  $("ratioNote").textContent = `Dnes ${num(now1,1)}, průměr od 2020 ${num(avg,1)}. Vyšší poměr znamená, že stříbro je vůči zlatu levnější než obvykle.`;
+}
+
+function yieldBlock(){
+  const G = DATA.gg, infl = Object.assign({}, DATA.inflation||{}, (HIST&&HIST.inflation)||{}), now = Date.now();
+  const cfs = [];
+  G.years.forEach(y=>y.pay.forEach(p=>{ if (!(p[2]||"").startsWith("Start")) { const [d,m] = p[0].split(".").map(x=>parseInt(x)); cfs.push({t:T(y.y,m,d),a:-p[1]}); } }));
+  const est = EX.costNow-G.years[G.years.length-1].total; if (est > 0) cfs.push({t:T(2026,6,30),a:-est});
+  cfs.sort((x,y)=>x.t-y.t);
+  const fac = t => { let f = 1; for (let y = new Date(t).getUTCFullYear(); y <= new Date(now).getUTCFullYear(); y++) {
+      const st = Math.max(t,Date.UTC(y,0,1)), en = Math.min(now,Date.UTC(y+1,0,1)); f *= Math.pow(1+(infl[y]||0)/100,(en-st)/YR); } return f; };
+  const paid = cfs.reduce((s,c)=>s-c.a,0), real = cfs.reduce((s,c)=>s-c.a*fac(c.t),0);
+  const flows = cfs.concat([{t:now,a:EX.valNow}]), x = xirr(flows);
+  const tAvg = cfs.reduce((s,c)=>s-c.a*c.t,0)/paid, pi = Math.pow(fac(tAvg),YR/(now-tAvg))-1, rr = x==null ? null : (1+x)/(1+pi)-1;
+  $("yieldK").innerHTML = kp("Zaplaceno celkem",fmt(paid)) + kp("Hodnota dnes (spot)",fmt(EX.valNow)) +
+    kp("Vklady v dnešních Kč",fmt(real)) + kp("Reálný zisk po inflaci",sg(EX.valNow-real),cls(EX.valNow-real)) +
+    kp("Roční výnos (XIRR)",x==null?"—":pct(x*100),x==null?"":cls(x)) + kp("Průměrná inflace za rok",pct(pi*100)) +
+    kp("Reálný roční výnos",rr==null?"—":pct(rr*100),rr==null?"":cls(rr));
+  const miss = []; for (let y = 2020; y <= new Date(now).getUTCFullYear(); y++) if (infl[y]==null) miss.push(y);
+  $("yieldNote").textContent = "XIRR bere v úvahu, kdy jsi kolik vložil. Počítá všechny platby z výpisů (bez startovací platby, poštovné je náklad) a odhad pro rok 2026 k 30. 6." +
+    (miss.length ? " Inflace chybí pro roky "+miss.join(", ")+", počítá se tam 0 %." : "");
+}
+
+function projUpdate(){
+  if (!EX) return;
+  const m = Math.max(0,+$("pm").value||0), g = +$("pg").value/100, goal = DATA.gg.goal, gm = Math.pow(1+g,1/12)-1;
+  $("pgv").textContent = (g*100).toFixed(0)+" %";
+  const val = k => EX.valNow*Math.pow(1+gm,k) + m*(gm ? (Math.pow(1+gm,k)-1)/gm : k);
+  const months = m > 0 ? Math.max(0,Math.ceil((goal-EX.costNow)/m)) : null;
+  const dateAt = k => { const d = new Date(); d.setMonth(d.getMonth()+k); return d; };
+  $("projK").innerHTML = kp("Cíl "+fmt(goal)+" (vloženo)", months==null?"—":months===0?"splněno":dateAt(months).toLocaleDateString("cs-CZ",{month:"long",year:"numeric"})) +
+    kp("Zbývá vložit",fmt(Math.max(0,goal-EX.costNow))) + kp("Hodnota za 5 let",fmt(val(60))) + kp("Hodnota za 10 let",fmt(val(120)));
+  const ks = Array.from({length:121},(_,k)=>k);
+  if (projChart) projChart.destroy();
+  projChart = new Chart($("projChart"),{ type:"line", data:{labels:ks.map(k=>mlab(dateAt(k))),datasets:[
+      {label:"Hodnota",data:ks.map(val),borderColor:V("--gold"),backgroundColor:V("--gold")+"33",fill:true,pointRadius:0,borderWidth:2},
+      {label:"Vloženo",data:ks.map(k=>EX.costNow+m*k),borderColor:V("--mute"),borderDash:[5,4],pointRadius:0,borderWidth:1.5}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{grid:{color:V("--line")},border:{display:false},ticks:{callback:tick}}},plugins:{legend:{position:"bottom"},tooltip:tip}}});
+}
+
+function taxUpdate(){
+  const m = Math.max(0,+$("tm").value||0), dip = Math.max(0,+$("td").value||0), rate = +$("tr").value/100;
+  const state = m >= 500 ? Math.min(m*0.2,340)*12 : 0;
+  const base = Math.min(48000, Math.max(0,m*12-20400)+dip), room = 48000-base;
+  $("taxK").innerHTML = kp("Státní příspěvek za rok",fmt(state)) + kp("Odpočet od základu daně",fmt(base)) +
+    kp("Úspora na dani",fmt(base*rate),"up") + kp("Zbývá do limitu 48 000 Kč",fmt(room));
+  const tips = [];
+  if (m < 1700) tips.push(`Při vkladu 1 700 Kč měsíčně získáš plný příspěvek 4 080 Kč ročně (teď ${fmt(state)}).`);
+  if (room > 0) tips.push(`Dalších ${fmt(room)} do DIP (nebo do penzijka nad 1 700 Kč měsíčně) sníží daň o ${fmt(room*rate)}.`);
+  $("taxNote").textContent = tips.join(" ") + " Pravidla pro rok 2026: příspěvek 20 % z vkladu od 500 Kč měsíčně, nejvýše 340 Kč; společný odpočet 48 000 Kč ročně pro penzijko nad 1 700 Kč měsíčně, DIP a životní pojištění; na DIP stát nepřispívá. Před rozhodnutím ověř u svého poskytovatele.";
+}
+
+async function init(){
+  try { DATA = await getJSON("data.json",{cache:"no-store"}); }
+  catch(e){ document.body.innerHTML = "<main><h1>Nelze načíst data.json</h1><p class='sub'>Na GitHub Pages musí být vedle index.html i soubor data.json. Lokálně spusť <code>python -m http.server</code> a otevři localhost.</p></main>"; return; }
+  try { HIST = await getJSON("history.json",{cache:"no-store"}); } catch(e){}
+  $("pm").value = DATA.gg.monthly; $("tm").value = DATA.tax.dpsMonthly; $("td").value = DATA.tax.dipYear;
+  ["pm","pg"].forEach(id=>$(id).addEventListener("input",projUpdate));
+  ["tm","td","tr"].forEach(id=>$(id).addEventListener("input",taxUpdate));
+  setup(); render(null);
+  loadPrices().then(render).catch(()=>{});
+}
+init();
 </script>
 </body>
 </html>
