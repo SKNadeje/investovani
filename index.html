@@ -98,7 +98,7 @@ footer{margin-top:28px;color:var(--mute);font-size:.85rem}
     <h2>Penzijko a DIP: státní příspěvek a odpočet</h2>
     <div class="ctl">
       <label>Měsíční vklad do penzijka (Kč) <input type="number" id="tm" min="0" step="100"></label>
-      <label>Roční vklad do DIP (Kč) <input type="number" id="td" min="0" step="1000"></label>
+      <label>Měsíční vklad do DIP (Kč) <input type="number" id="td" min="0" step="100"></label>
       <label>Sazba daně <select id="tr"><option value="15">15 %</option><option value="23">23 %</option></select></label>
     </div>
     <div class="kpis" id="taxK"></div><p class="hint" id="taxNote"></p>
@@ -169,7 +169,10 @@ function detail(it){
     h += kp("Množství",num(it.grams,2)+" g ("+num(it.grams/OZ,3)+" oz)") + kp("Ø nákupní cena / "+it.unit,fmt(it.avg));
     if (it.spot) { const s = it.spot/OZ*it.per; h += kp("Spot / "+it.unit,fmt(s)) + kp("Spot oproti Ø nákupní",pct((s/it.avg-1)*100),cls(s-it.avg)); }
   }
-  (it.funds||[]).forEach(f=>{ h += kp(f.name+" (od převodu)",pct(f.pct),cls(f.pct)); if(f.value!=null){ const g=f.value-f.value/(1+f.pct/100); h += kp(f.name+": hodnota",fmt(f.value)) + kp(f.name+": zisk od převodu",sg(g),cls(g)); } });
+  (it.funds||[]).forEach(f=>{
+    if (f.pct==null) { h += kp(f.name,fmt(f.value)); return; }
+    h += kp(f.name+" (od převodu)",pct(f.pct),cls(f.pct));
+    if (f.value!=null) { const g = f.value-f.value/(1+f.pct/100); h += kp(f.name+": hodnota",fmt(f.value)) + kp(f.name+": zisk od převodu",sg(g),cls(g)); } });
   if (it.funds && it.funds.every(f=>f.value!=null)) { const rest = it.value-it.funds.reduce((s,f)=>s+f.value,0); if (Math.abs(rest)>1) h += kp("Mimo uvedené fondy",fmt(rest)); }
   if (it.flowsSum) h += kp("Zapsané vklady",fmt(it.flowsSum));
   h += `</div>`;
@@ -380,14 +383,14 @@ function projUpdate(){
 }
 
 function taxUpdate(){
-  const m = Math.max(0,+$("tm").value||0), dip = Math.max(0,+$("td").value||0), rate = +$("tr").value/100;
+  const m = Math.max(0,+$("tm").value||0), dip = Math.max(0,+$("td").value||0)*12, rate = +$("tr").value/100;
   const state = m >= 500 ? Math.min(m*0.2,340)*12 : 0;
   const base = Math.min(48000, Math.max(0,m*12-20400)+dip), room = 48000-base;
   $("taxK").innerHTML = kp("Státní příspěvek za rok",fmt(state)) + kp("Odpočet od základu daně",fmt(base)) +
     kp("Úspora na dani",fmt(base*rate),"up") + kp("Zbývá do limitu 48 000 Kč",fmt(room));
   const tips = [];
   if (m < 1700) tips.push(`Při vkladu 1 700 Kč měsíčně získáš plný příspěvek 4 080 Kč ročně (teď ${fmt(state)}).`);
-  if (room > 0) tips.push(`Dalších ${fmt(room)} do DIP (nebo do penzijka nad 1 700 Kč měsíčně) sníží daň o ${fmt(room*rate)}.`);
+  if (room > 0) tips.push(`Dalších ${fmt(room)} do DIP (tj. asi ${fmt(Math.ceil(room/12))} měsíčně, nebo do penzijka nad 1 700 Kč měsíčně) sníží daň o ${fmt(room*rate)}.`);
   $("taxNote").textContent = tips.join(" ") + " Pravidla pro rok 2026: příspěvek 20 % z vkladu od 500 Kč měsíčně, nejvýše 340 Kč; společný odpočet 48 000 Kč ročně pro penzijko nad 1 700 Kč měsíčně, DIP a životní pojištění; na DIP stát nepřispívá. Před rozhodnutím ověř u svého poskytovatele.";
 }
 
@@ -395,7 +398,7 @@ async function init(){
   try { DATA = await getJSON("data.json",{cache:"no-store"}); }
   catch(e){ document.body.innerHTML = "<main><h1>Nelze načíst data.json</h1><p class='sub'>Na GitHub Pages musí být vedle index.html i soubor data.json. Lokálně spusť <code>python -m http.server</code> a otevři localhost.</p></main>"; return; }
   try { HIST = await getJSON("history.json",{cache:"no-store"}); } catch(e){}
-  $("pm").value = DATA.gg.monthly; $("tm").value = DATA.tax.dpsMonthly; $("td").value = DATA.tax.dipYear;
+  $("pm").value = DATA.gg.monthly; $("tm").value = DATA.tax.dpsMonthly; $("td").value = DATA.tax.dipMonthly;
   ["pm","pg"].forEach(id=>$(id).addEventListener("input",projUpdate));
   ["tm","td","tr"].forEach(id=>$(id).addEventListener("input",taxUpdate));
   setup(); render(null);
