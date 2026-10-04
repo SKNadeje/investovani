@@ -250,7 +250,7 @@ function render(p){
 
   const card = (it,total) => {
     const dep = it.deposits, d = dep==null ? null : it.value-dep;
-    const sub = total ? `<div class="chg ${cls(kV-kD)}">bez penzijka: ${sg(kV-kD)} (${pct((kV-kD)/kD*100)})</div>`
+    const sub = total ? `<div class="chg ${cls(kV-kD)}">Zisk ${sg(kV-kD)} (${pct((kV-kD)/kD*100)})</div><div class="hint">z vložených ${fmt(kD)}. Bez penzijka (${fmt(totalVal-kV)}), jehož vklady neznám.</div>`
       : dep==null ? `<div class="chg" style="color:var(--mute)">vklady neznámé</div>`
       : `<div class="chg ${cls(d)}">${sg(d)} (${pct(d/dep*100)})</div>`;
     const inner = `<div class="name"><span class="dot" style="background:${it.color}"></span>${it.name}${it.exclude?" (mimo celkem)":""}</div><div class="big">${fmt(it.value)}</div>${sub}`;
