@@ -1,0 +1,396 @@
+{
+ "updated": "2026-10-04",
+ "metals": [
+  {
+   "id": "gold",
+   "name": "Zlato",
+   "color": "#c9a227",
+   "symbol": "XAU",
+   "grams": 106.0605,
+   "avg": 57646,
+   "per": 31.1035,
+   "unit": "oz"
+  },
+  {
+   "id": "silver",
+   "name": "Stříbro",
+   "color": "#8a97a6",
+   "symbol": "XAG",
+   "grams": 1134.71,
+   "avg": 29611,
+   "per": 1000,
+   "unit": "kg"
+  }
+ ],
+ "manual": [
+  {
+   "id": "edward",
+   "name": "Edward",
+   "color": "#2a8c82",
+   "value": 343641.75,
+   "deposits": 302660,
+   "hist": [],
+   "parts": [
+    {
+     "l": "Vloženo",
+     "v": 302660,
+     "c": "#2a8c82"
+    },
+    {
+     "l": "Zisk",
+     "v": 40981.75,
+     "c": "#1e7a52"
+    }
+   ]
+  },
+  {
+   "id": "penze",
+   "name": "Penzijko",
+   "color": "#5b5fa8",
+   "value": 260630,
+   "deposits": null,
+   "hist": [],
+   "flows": [],
+   "funds": [
+    {
+     "name": "Vyvážený fond",
+     "pct": 18.5,
+     "value": 8790.31
+    },
+    {
+     "name": "Dynamický fond",
+     "pct": 30.46,
+     "value": 47721.83
+    }
+   ]
+  },
+  {
+   "id": "dip",
+   "name": "DIP",
+   "color": "#c0623f",
+   "value": 3694.71,
+   "deposits": 3706,
+   "hist": []
+  },
+  {
+   "id": "syn",
+   "name": "Penzijko syn",
+   "color": "#9a8fd6",
+   "value": 79363.56,
+   "deposits": 50420,
+   "exclude": true,
+   "hist": [],
+   "parts": [
+    {
+     "l": "Tvoje vklady",
+     "v": 41000,
+     "c": "#9a8fd6"
+    },
+    {
+     "l": "Státní příspěvky",
+     "v": 9420,
+     "c": "#6b9bd1"
+    },
+    {
+     "l": "Zhodnocení",
+     "v": 28943.56,
+     "c": "#1e7a52"
+    }
+   ]
+  }
+ ],
+ "gg": {
+  "goal": 500000,
+  "years": [
+   {
+    "y": 2020,
+    "saved": 58801,
+    "total": 58801,
+    "gold": 36.3135,
+    "silver": 0,
+    "goldAvg": 50360.65,
+    "silverAvg": null,
+    "bonus": "Aktivované kredity: 2 352 (0,47 g zlata).",
+    "pay": [
+     [
+      "29. 9.",
+      20000,
+      "Startovací platba (do naspořeno se nepočítá)"
+     ],
+     [
+      "29. 9.",
+      2000
+     ],
+     [
+      "29. 9.",
+      49000,
+      "Zlatý slitek 1 oz"
+     ],
+     [
+      "7. 10.",
+      3000,
+      "",
+      199
+     ],
+     [
+      "6. 11.",
+      3000
+     ],
+     [
+      "7. 12.",
+      2000
+     ]
+    ]
+   },
+   {
+    "y": 2021,
+    "saved": 36600,
+    "total": 95401,
+    "gold": 40.8335,
+    "silver": 1002.69,
+    "goldAvg": 49355.56,
+    "silverAvg": 30517.77,
+    "bonus": "Spotřebované kredity: 2 352. Aktivované: 1 464 (0,06 g zlata, 32,94 g stříbra).",
+    "pay": [
+     [
+      "8. 1.",
+      3000
+     ],
+     [
+      "5. 2.",
+      1000
+     ],
+     [
+      "8. 2.",
+      2000
+     ],
+     [
+      "8. 3.",
+      5000
+     ],
+     [
+      "18. 5.",
+      6000
+     ],
+     [
+      "8. 6.",
+      8000
+     ],
+     [
+      "24. 8.",
+      2000
+     ],
+     [
+      "7. 9.",
+      3000
+     ],
+     [
+      "6. 10.",
+      3000
+     ],
+     [
+      "5. 11.",
+      3600,
+      "Stříbrný slitek 1 kg"
+     ]
+    ]
+   },
+   {
+    "y": 2022,
+    "saved": 25881,
+    "total": 121282,
+    "gold": 55.1435,
+    "silver": 1131.65,
+    "goldAvg": 49452.06,
+    "silverAvg": 29691.29,
+    "bonus": "Spotřebované kredity: 1 464. Aktivované: 1 035 (3,07 g stříbra, 0,19 g zlata).",
+    "pay": [
+     [
+      "2. 3.",
+      3000,
+      "",
+      119
+     ],
+     [
+      "8. 3.",
+      5000
+     ],
+     [
+      "11. 3.",
+      3000
+     ],
+     [
+      "12. 4.",
+      3000
+     ],
+     [
+      "19. 5.",
+      3000
+     ],
+     [
+      "14. 6.",
+      3000
+     ],
+     [
+      "12. 7.",
+      3000
+     ],
+     [
+      "27. 12.",
+      3000
+     ]
+    ]
+   },
+   {
+    "y": 2023,
+    "saved": 19881,
+    "total": 141163,
+    "gold": 68.337,
+    "silver": 1134.71,
+    "goldAvg": 48954.88,
+    "silverAvg": 29610.96,
+    "bonus": "Spotřebované kredity: 1 830. Aktivované: 795 (0,18 g zlata).",
+    "pay": [
+     [
+      "17. 5.",
+      3000
+     ],
+     [
+      "15. 6.",
+      3000
+     ],
+     [
+      "17. 7.",
+      3000
+     ],
+     [
+      "17. 7.",
+      2000,
+      "Zlatý slitek 1 oz"
+     ],
+     [
+      "15. 8.",
+      3000,
+      "",
+      119
+     ],
+     [
+      "15. 9.",
+      3000
+     ],
+     [
+      "16. 10.",
+      3000
+     ]
+    ]
+   },
+   {
+    "y": 2024,
+    "saved": 33000,
+    "total": 174163,
+    "gold": 85.587,
+    "silver": 1134.71,
+    "goldAvg": 51080.97,
+    "silverAvg": 29610.96,
+    "bonus": "Spotřebované kredity: 1 200. Aktivované: 1 320 (0,19 g zlata).",
+    "pay": [
+     [
+      "19. 2.",
+      3000
+     ],
+     [
+      "15. 3.",
+      3000
+     ],
+     [
+      "15. 4.",
+      3000
+     ],
+     [
+      "15. 5.",
+      3000
+     ],
+     [
+      "17. 6.",
+      3000
+     ],
+     [
+      "15. 7.",
+      3000
+     ],
+     [
+      "19. 8.",
+      3000
+     ],
+     [
+      "16. 9.",
+      3000
+     ],
+     [
+      "15. 10.",
+      3000
+     ],
+     [
+      "15. 11.",
+      3000
+     ],
+     [
+      "16. 12.",
+      3000
+     ]
+    ]
+   },
+   {
+    "y": 2025,
+    "saved": 35000,
+    "total": 209163,
+    "gold": 99.5505,
+    "silver": 1134.71,
+    "goldAvg": 54854.18,
+    "silverAvg": 29610.96,
+    "bonus": "Spotřebované kredity: 120. Aktivované: 1 400 (0,12 g zlata).",
+    "pay": [
+     [
+      "16. 4.",
+      20000,
+      "Zlatý slitek 1 oz"
+     ],
+     [
+      "17. 4.",
+      3000
+     ],
+     [
+      "19. 5.",
+      3000
+     ],
+     [
+      "17. 6.",
+      3000
+     ],
+     [
+      "17. 7.",
+      3000
+     ],
+     [
+      "22. 9.",
+      3000
+     ]
+    ]
+   }
+  ],
+  "monthly": 3000
+ },
+ "history": [],
+ "_napoveda": "Soubor s tvými daty. Hodnoty uprav přímo tady (GitHub: tužka Edit). value = aktuální hodnota v Kč, deposits = vloženo, flows = jednotlivé vklady, hist = měsíční snapshoty {date,value,deposits}, exclude:true = mimo Celkem.",
+ "tax": {
+  "dpsMonthly": 1700,
+  "dipYear": 3706
+ },
+ "inflation": {
+  "2020": 3.2,
+  "2021": 3.8,
+  "2022": 15.1,
+  "2023": 10.7,
+  "2024": 2.4
+ }
+}
