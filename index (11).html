@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Moje investice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#1b2733;--mute:#66758a;--line:#dbe1e8;--up:#1e7a52;--down:#b23a2e}
+@media(prefers-color-scheme:dark){:root{--bg:#12181f;--card:#1a232d;--ink:#e8edf2;--mute:#8b9bb0;--line:#2a3643;--up:#4fc08a;--down:#e5786b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Instrument Sans",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:32px 20px 64px}
+h1,h2,.big{font-family:"Bricolage Grotesque","Instrument Sans",sans-serif;font-weight:700;letter-spacing:-.02em;margin:0}
+h1{font-size:clamp(2rem,6vw,3.2rem)}
+h2{font-size:1.15rem;margin-bottom:12px}
+.sub{color:var(--mute);margin:4px 0 28px}
+.grid{display:grid;gap:16px}
+.cards{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+.card .name{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:.9rem}
+.dot{width:10px;height:10px;border-radius:50%}
+.big{font-size:1.7rem;margin:6px 0 2px}
+.chg{font-size:.9rem;font-weight:600}
+.up{color:var(--up)}.down{color:var(--down)}
+.total .big{font-size:2.4rem}
+.chart{position:relative;height:300px}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mute);font-weight:600}
+.wrap{overflow-x:auto}
+footer{margin-top:28px;color:var(--mute);font-size:.85rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Moje investice</h1>
+  <p class="sub" id="updated"></p>
+
+  <div class="grid cards" id="cards"></div>
+
+  <div class="grid two">
+    <section class="card"><h2>Vývoj hodnoty portfolia</h2><div class="chart"><canvas id="lineChart"></canvas></div></section>
+    <section class="card"><h2>Rozložení portfolia</h2><div class="chart"><canvas id="pieChart"></canvas></div></section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Přehled</h2>
+    <div class="wrap"><table id="table"></table></div>
+  </section>
+
+  <footer>Ukázková data. Čísla uprav v souboru <code>index.html</code> v sekci DATA.</footer>
+</main>
+
+<script>
+/* ========= DATA — sem piš svoje čísla (v Kč) =========
+   values  = hodnota položky na konci měsíce
+   deposits = kolik jsi do položky celkem vložil (kumulativně)
+   Měsíce přidávej na konec pole "months" a ke každé položce přidej hodnotu. */
+const DATA = {
+  updated: "2026-10-04",
+  months: ["2026-04","2026-05","2026-06","2026-07","2026-08","2026-09","2026-10"],
+  assets: [
+    { name:"Zlato",    color:"#c9a227", values:[40000,42500,43800,46200,47000,49500,51200], deposits:[38000,40000,40000,42000,42000,44000,44000] },
+    { name:"Stříbro",  color:"#8a97a6", values:[15000,15800,15200,16900,18100,17600,19300], deposits:[15000,15000,15000,16000,16000,16000,16000] },
+    { name:"Edward",   color:"#2a8c82", values:[60000,63500,65200,68900,72000,74500,78300], deposits:[58000,61000,62000,65000,67000,69000,71000] },
+    { name:"Penzijko", color:"#5b5fa8", values:[30000,31000,32100,33200,34300,35400,36500], deposits:[29000,30000,31000,32000,33000,34000,35000] },
+    { name:"DIP",      color:"#c0623f", values:[20000,21200,22100,23600,24500,26000,27400], deposits:[20000,21000,22000,23000,24000,25000,26000] }
+  ]
+};
+/* ====================================================== */
+
+const fmt = n => new Intl.NumberFormat("cs-CZ",{style:"currency",currency:"CZK",maximumFractionDigits:0}).format(n);
+const pct = n => (n>=0?"+":"")+n.toFixed(1).replace(".",",")+" %";
+const monthLabel = m => new Date(m+"-01").toLocaleDateString("cs-CZ",{month:"short",year:"2-digit"});
+const last = a => a[a.length-1];
+
+const A = DATA.assets;
+const totalVal = last(A.map(a=>last(a.values)).reduce((s,v)=>[(s[0]||0)+v],[0]));
+const totalDep = A.reduce((s,a)=>s+last(a.deposits),0);
+
+document.getElementById("updated").textContent =
+  "Aktualizováno " + new Date(DATA.updated).toLocaleDateString("cs-CZ",{day:"numeric",month:"long",year:"numeric"});
+
+function card(name,color,val,dep,extra){
+  const p = val-dep, r = dep? p/dep*100 : 0, cls = p>=0?"up":"down";
+  return `<div class="card ${extra||""}"><div class="name"><span class="dot" style="background:${color}"></span>${name}</div>
+  <div class="big">${fmt(val)}</div>
+  <div class="chg ${cls}">${p>=0?"+":""}${fmt(p)} (${pct(r)})</div></div>`;
+}
+document.getElementById("cards").innerHTML =
+  card("Celkem","#1b2733",totalVal,totalDep,"total") +
+  A.map(a=>card(a.name,a.color,last(a.values),last(a.deposits))).join("");
+
+document.getElementById("table").innerHTML =
+  `<tr><th>Položka</th><th>Vloženo</th><th>Hodnota</th><th>Zisk</th><th>Výnos</th><th>Podíl</th></tr>` +
+  A.map(a=>{const v=last(a.values),d=last(a.deposits),p=v-d;
+    return `<tr><td>${a.name}</td><td>${fmt(d)}</td><td>${fmt(v)}</td><td class="${p>=0?"up":"down"}">${fmt(p)}</td><td class="${p>=0?"up":"down"}">${pct(d?p/d*100:0)}</td><td>${(v/totalVal*100).toFixed(0)} %</td></tr>`}).join("") +
+  `<tr><td><b>Celkem</b></td><td><b>${fmt(totalDep)}</b></td><td><b>${fmt(totalVal)}</b></td><td><b>${fmt(totalVal-totalDep)}</b></td><td><b>${pct((totalVal-totalDep)/totalDep*100)}</b></td><td>100 %</td></tr>`;
+
+const css = getComputedStyle(document.documentElement);
+const tick = css.getPropertyValue("--mute").trim(), grid = css.getPropertyValue("--line").trim();
+Chart.defaults.font.family = '"Instrument Sans", system-ui, sans-serif';
+Chart.defaults.color = tick;
+
+new Chart(document.getElementById("lineChart"),{
+  type:"line",
+  data:{labels:DATA.months.map(monthLabel),
+    datasets:A.map(a=>({label:a.name,data:a.values,borderColor:a.color,backgroundColor:a.color+"cc",fill:true,tension:.3,pointRadius:0,borderWidth:1.5}))},
+  options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+    scales:{x:{grid:{display:false}},y:{stacked:true,grid:{color:grid},ticks:{callback:v=>v/1000+" tis."}}},
+    plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.parsed.y)}`}}}}
+});
+
+new Chart(document.getElementById("pieChart"),{
+  type:"doughnut",
+  data:{labels:A.map(a=>a.name),datasets:[{data:A.map(a=>last(a.values)),backgroundColor:A.map(a=>a.color),borderWidth:2,borderColor:css.getPropertyValue("--card").trim()}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:"62%",
+    plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.parsed)}`}}}}
+});
+</script>
+</body>
+</html>
