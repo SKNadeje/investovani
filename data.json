@@ -388,8 +388,9 @@
  "history": [],
  "_napoveda": "Soubor s tvými daty. Hodnoty uprav přímo tady (GitHub: tužka Edit). value = aktuální hodnota v Kč, deposits = vloženo, flows = jednotlivé vklady, hist = měsíční snapshoty {date,value,deposits}, exclude:true = mimo Celkem.",
  "tax": {
-  "dpsMonthly": 1700,
-  "dipMonthly": 0
+  "dpsMonthly": 1000,
+  "dipMonthly": 200,
+  "dipEmployerMonthly": 1100
  },
  "inflation": {
   "2020": 3.2,
