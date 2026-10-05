@@ -155,7 +155,9 @@ function build(p){
   });
   const man = DATA.manual.map(a=>{
     const it = { ...a };
-    it.flowsSum = (a.flows||[]).reduce((s,f)=>s+f.amount,0); if (it.deposits!=null) it.deposits += it.flowsSum;
+    if (a.funds && a.funds.every(f=>f.value!=null && f.profit!=null)) { // hodnoty i zisky fondů z aplikace banky
+      it.value = a.funds.reduce((s,f)=>s+f.value,0); it.deposits = a.funds.reduce((s,f)=>s+f.value-f.profit,0); it.flowsSum = 0;
+    } else { it.flowsSum = (a.flows||[]).reduce((s,f)=>s+f.amount,0); if (it.deposits!=null) it.deposits += it.flowsSum; }
     return it;
   });
   return metals.concat(man);
@@ -172,8 +174,8 @@ function detail(it){
   }
   (it.funds||[]).forEach(f=>{
     if (f.pct==null) { h += kp(f.name,fmt(f.value)); return; }
-    h += kp(f.name+" (od převodu)",pct(f.pct),cls(f.pct));
-    if (f.value!=null) { const g = f.value-f.value/(1+f.pct/100); h += kp(f.name+": hodnota",fmt(f.value)) + kp(f.name+": zisk od převodu",sg(g),cls(g)); } });
+    h += kp(f.name+" (za celou dobu)",pct(f.pct),cls(f.pct));
+    if (f.value!=null) { const g = f.profit!=null ? f.profit : f.value-f.value/(1+f.pct/100); h += kp(f.name+": hodnota",fmt(f.value)) + kp(f.name+": zisk",sg(g),cls(g)); } });
   if (it.funds && it.funds.every(f=>f.value!=null)) { const rest = it.value-it.funds.reduce((s,f)=>s+f.value,0); if (Math.abs(rest)>1) h += kp("Mimo uvedené fondy",fmt(rest)); }
   if (it.flowsSum) h += kp("Zapsané vklady",fmt(it.flowsSum));
   h += `</div>`;
@@ -250,7 +252,7 @@ function render(p){
 
   const card = (it,total) => {
     const dep = it.deposits, d = dep==null ? null : it.value-dep;
-    const sub = total ? `<div class="chg ${cls(kV-kD)}">Zisk ${sg(kV-kD)} (${pct((kV-kD)/kD*100)})</div><div class="hint">z vložených ${fmt(kD)}. Bez penzijka (${fmt(totalVal-kV)}), jehož vklady neznám.</div>`
+    const sub = total ? `<div class="chg ${cls(kV-kD)}">Zisk ${sg(kV-kD)} (${pct((kV-kD)/kD*100)})</div><div class="hint">z vložených ${fmt(kD)}${mine.some(a=>a.deposits==null)?". Bez položek, jejichž vklady neznám ("+fmt(totalVal-kV)+")":""}.</div>`
       : dep==null ? `<div class="chg" style="color:var(--mute)">vklady neznámé</div>`
       : `<div class="chg ${cls(d)}">${sg(d)} (${pct(d/dep*100)})</div>`;
     const inner = `<div class="name"><span class="dot" style="background:${it.color}"></span>${it.name}${it.exclude?" (mimo celkem)":""}</div><div class="big">${fmt(it.value)}</div>${sub}`;
