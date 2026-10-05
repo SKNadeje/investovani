@@ -45,6 +45,10 @@ dialog::backdrop{background:#0009}
 .ctl{display:flex;flex-wrap:wrap;gap:12px 20px;margin-bottom:8px}.ctl label{display:flex;flex-direction:column;gap:4px;font-size:.88rem;color:var(--mute)}
 input,select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
 footer{margin-top:28px;color:var(--mute);font-size:.85rem}
+.btn{font:inherit;padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);cursor:pointer}.btn:hover{border-color:var(--mute)}
+.delta{font-size:.82rem;font-weight:600;margin-top:2px}.spark{display:block;width:100%;height:28px;margin-top:6px}
+textarea{width:100%;font:12px/1.4 ui-monospace,monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+@media print{:root{--bg:#fff;--card:#fff;--ink:#000;--mute:#555;--line:#ccc;--up:#1e7a52;--down:#b23a2e}main,.noprint{display:none!important}dialog{position:static;border:none;width:100%;max-height:none}}
 </style>
 </head>
 <body>
@@ -53,6 +57,7 @@ footer{margin-top:28px;color:var(--mute);font-size:.85rem}
   <p class="sub" id="updated"></p>
   <div class="grid cards" id="cards"></div>
   <p class="hint">Klikni na kartu pro detail položky.</p>
+  <div class="ctl" style="margin-top:10px"><button class="btn" id="bRep">Měsíční report</button><button class="btn" id="bUpd">Měsíční aktualizace</button></div>
 
   <div class="grid two">
     <section class="card"><h2>Vloženo vs. dnešní hodnota</h2><div class="chart"><canvas id="barChart"></canvas></div></section>
@@ -61,6 +66,7 @@ footer{margin-top:28px;color:var(--mute);font-size:.85rem}
 
   <section class="card" style="margin-top:16px"><h2>Přehled</h2><div class="wrap"><table id="table"></table></div></section>
   <p class="sub" id="status" style="margin:12px 0 0"></p>
+  <section class="card" style="margin-top:16px"><h2>Vývoj celkové hodnoty</h2><div id="totWrap"><div class="chart" style="height:240px"><canvas id="totChart"></canvas></div></div></section>
 
   <section class="card" style="margin-top:16px">
     <h2>Spoření u Golden Gate</h2>
@@ -104,6 +110,8 @@ footer{margin-top:28px;color:var(--mute);font-size:.85rem}
     </div>
     <div class="kpis" id="taxK"></div><p class="hint" id="taxNote"></p>
   </section>
+
+  <section class="card" style="margin-top:16px" id="mortgage"><h2>Hypotéka</h2><div id="mortWrap"></div></section>
 
   <footer>Zlato a stříbro se oceňuje podle spotové ceny (výkup u obchodníka bývá nižší). Řádek 2026* je odhad z průměrných cen. Data uprav v souboru <code>data.json</code>.</footer>
 </main>
@@ -160,7 +168,8 @@ function build(p){
     } else { it.flowsSum = (a.flows||[]).reduce((s,f)=>s+f.amount,0); if (it.deposits!=null) it.deposits += it.flowsSum; }
     return it;
   });
-  return metals.concat(man);
+  const S = DATA.snapshots || [];
+  return metals.concat(man).map(it=>{ it.hist = S.filter(x=>x.items && x.items[it.id]).map(x=>({date:x.date,value:x.items[it.id].value,deposits:x.items[it.id].deposits})); return it; });
 }
 
 /* --- detail položky --- */
@@ -188,7 +197,7 @@ function detail(it){
   h += `<h2 style="margin-top:18px">${it.kind==="metal"?"Vývoj množství a nákupní ceny":"Vývoj hodnoty"}</h2>`;
   const hist = it.hist||[];
   if (it.kind==="metal" || hist.length>=2) h += `<div class="chart" style="height:260px"><canvas id="dc"></canvas></div>`;
-  else h += `<p class="hint">Historie zatím není. Přidávej záznamy <code>{date:"2026-11-01", value:…, deposits:…}</code> do pole <code>hist</code> této položky, vždy k prvnímu v měsíci.</p>`;
+  else h += `<p class="hint">Historie zatím není. Každý měsíc použij tlačítko Měsíční aktualizace, od druhého záznamu se tu objeví graf.</p>`;
   return h;
 }
 function detailChart(it){
@@ -255,11 +264,13 @@ function render(p){
     const sub = total ? `<div class="chg ${cls(kV-kD)}">Zisk ${sg(kV-kD)} (${pct((kV-kD)/kD*100)})</div><div class="hint">z vložených ${fmt(kD)}${mine.some(a=>a.deposits==null)?". Bez položek, jejichž vklady neznám ("+fmt(totalVal-kV)+")":""}.</div>`
       : dep==null ? `<div class="chg" style="color:var(--mute)">vklady neznámé</div>`
       : `<div class="chg ${cls(d)}">${sg(d)} (${pct(d/dep*100)})</div>`;
-    const inner = `<div class="name"><span class="dot" style="background:${it.color}"></span>${it.name}${it.exclude?" (mimo celkem)":""}</div><div class="big">${fmt(it.value)}</div>${sub}`;
+    const inner = `<div class="name"><span class="dot" style="background:${it.color}"></span>${it.name}${it.exclude?" (mimo celkem)":""}</div><div class="big">${fmt(it.value)}</div>${sub}${trend(it.id||"total",it.value,it.color||V("--ink"))}`;
     return total ? `<div class="card total">${inner}</div>` : `<button class="card" data-id="${it.id}">${inner}</button>`;
   };
-  $("cards").innerHTML = card({name:"Celkem",color:V("--ink"),value:totalVal},true) + ITEMS.map(a=>card(a)).join("");
-  $("cards").querySelectorAll("button").forEach(b=>b.onclick=()=>showItem(b.dataset.id));
+  const Mg = DATA.mortgage || {};
+  const mcard = Mg.balance>0 ? `<button class="card" data-scroll="mortgage"><div class="name"><span class="dot" style="background:#b23a2e"></span>Hypotéka</div><div class="big">${fmt(Mg.balance)}</div><div class="chg" style="color:var(--mute)">${Mg.payment?fmt(Mg.payment)+" měsíčně":"zbývá splatit"}${Mg.rate!=null?", úrok "+num(Mg.rate,2)+" %":""}</div></button>` : "";
+  $("cards").innerHTML = card({name:"Celkem",color:V("--ink"),value:totalVal},true) + ITEMS.map(a=>card(a)).join("") + mcard;
+  $("cards").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.scroll ? $(b.dataset.scroll).scrollIntoView({behavior:"smooth"}) : showItem(b.dataset.id));
 
   $("table").innerHTML = `<tr><th>Položka</th><th>Vloženo</th><th>Hodnota</th><th>Zisk</th><th>Výnos</th><th>Podíl</th></tr>` +
     ITEMS.map(a=>{ const d=a.deposits, pr=d==null?null:a.value-d, c=pr==null?"":cls(pr);
@@ -313,10 +324,10 @@ function xirr(c){ const t0 = c[0].t, f = r => c.reduce((s,x)=>s+x.a/Math.pow(1+r
 
 function extras(){
   const gold = ITEMS.find(x=>x.id==="gold"), silv = ITEMS.find(x=>x.id==="silver");
-  EX = { costNow: gold.deposits+silv.deposits, valNow: gold.value+silv.value };
+  EX = { costNow: gold.deposits+silv.deposits, valNow: gold.value+silv.value, total: ITEMS.filter(a=>!a.exclude).reduce((t,a)=>t+a.value,0) };
   if (HIST && HIST.daily && HIST.daily.length) metalsHistory(gold,silv);
   else $("mhWrap").innerHTML = `<p class="hint">Historické ceny zatím nejsou. V GitHubu spusť Actions → Deploy Pages → Run workflow, soubor <code>history.json</code> se vytvoří sám a každý den se obnoví.</p>`;
-  yieldBlock(); projUpdate(); taxUpdate();
+  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); mortUpdate();
 }
 
 function metalsHistory(gold,silv){
@@ -397,10 +408,136 @@ function taxUpdate(){
   $("taxNote").textContent = tips.join(" ") + " Pravidla pro rok 2026: příspěvek 20 % z vkladu od 500 Kč měsíčně, nejvýše 340 Kč; společný odpočet 48 000 Kč ročně pro penzijko nad 1 700 Kč měsíčně, DIP a životní pojištění; na DIP stát nepřispívá. Příspěvek zaměstnavatele se do odpočtu nepočítá, má vlastní osvobození do 50 000 Kč ročně (limit se sdílí s dalšími produkty, ověř u zaměstnavatele). Před rozhodnutím ověř u svého poskytovatele.";
 }
 
+/* ============ trendy, report, aktualizace, hypotéka ============ */
+function spark(v,c){ const mn = Math.min(...v), mx = Math.max(...v), r = mx-mn || 1;
+  const pts = v.map((x,i)=>`${(i/(v.length-1)*100).toFixed(1)},${(26-(x-mn)/r*24).toFixed(1)}`).join(" ");
+  return `<svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`; }
+const snapVal = (s,id) => id==="total" ? s.total : (s.items[id]||{}).value;
+function refSnap(){ const S = DATA.snapshots||[]; return [...S].reverse().find(x=>Date.now()-Date.parse(x.date) >= 20*864e5) || null; }
+function trend(id,val,color){
+  const S = DATA.snapshots||[]; if (!S.length) return "";
+  const vals = S.map(x=>snapVal(x,id)).filter(v=>v!=null).concat([val]), ref = refSnap(), rv = ref && snapVal(ref,id);
+  let h = ""; if (rv!=null) { const dd = val-rv; h += `<div class="delta ${cls(dd)}">${sg(dd)} od ${new Date(ref.date).toLocaleDateString("cs-CZ",{day:"numeric",month:"numeric"})}</div>`; }
+  return h + (vals.length>=2 ? spark(vals,color) : ""); }
+
+function totalChart(){
+  const S = DATA.snapshots||[], wrap = $("totWrap");
+  if (!S.length) { wrap.innerHTML = `<p class="hint" style="margin:0">Graf se objeví po prvním uložení snapshotu: klikni na Měsíční aktualizace, vyplň čísla a nahraj vygenerovaný data.json. Od druhého záznamu uvidíš vývoj.</p>`; return; }
+  const M = (DATA.mortgage||{}).balance, pts = S.map(x=>({d:x.date,t:x.total,m:x.mortgage})).concat([{d:iso(Date.now()),t:EX.total,m:M==null?null:M}]);
+  const net = pts.some(p=>p.m!=null);
+  mk(charts,"totChart",{ type:"line", data:{labels:pts.map(p=>new Date(p.d).toLocaleDateString("cs-CZ",{day:"numeric",month:"numeric",year:"2-digit"})),datasets:[
+      {label:"Hodnota investic",data:pts.map(p=>p.t),borderColor:V("--gold"),backgroundColor:V("--gold")+"33",fill:true,tension:.2,pointRadius:3},
+      ...(net?[{label:"Investice minus hypotéka",data:pts.map(p=>p.m==null?null:p.t-p.m),borderColor:V("--ink"),borderDash:[5,4],pointRadius:2,spanGaps:true}]:[])]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},scales:sc(),plugins:{legend:{position:"bottom"},tooltip:tip}}}); }
+
+/* --- měsíční report --- */
+function reportData(){
+  const mine = ITEMS.filter(a=>!a.exclude), total = mine.reduce((s,a)=>s+a.value,0), ref = refSnap();
+  const known = mine.filter(a=>a.deposits!=null), profit = known.reduce((s,a)=>s+a.value-a.deposits,0), dep = known.reduce((s,a)=>s+a.deposits,0);
+  const rows = ITEMS.map(a=>{ const rv = ref && ref.items[a.id] ? ref.items[a.id].value : null;
+    return { name:a.name+(a.exclude?" (mimo celkem)":""), value:a.value, chg:rv==null?null:a.value-rv, profit:a.deposits==null?null:a.value-a.deposits, ret:a.deposits?(a.value-a.deposits)/a.deposits*100:null, ex:a.exclude }; });
+  const best = rows.filter(r=>!r.ex && r.ret!=null).sort((a,b)=>b.ret-a.ret)[0], grow = rows.filter(r=>!r.ex && r.chg!=null).sort((a,b)=>b.chg-a.chg)[0];
+  const M = DATA.mortgage||{}, G = DATA.gg, mNet = M.balance>0 ? total-M.balance : null;
+  const refTotal = ref ? ref.total : null;
+  const lines = [];
+  if (refTotal!=null) lines.push(`Celková hodnota se od ${new Date(ref.date).toLocaleDateString("cs-CZ")} změnila o ${sg(total-refTotal)} (${pct((total-refTotal)/refTotal*100)}).`);
+  if (best) lines.push(`Nejlepší výnos má ${best.name} (${pct(best.ret)}).`);
+  if (grow && grow.chg>0) lines.push(`Nejvíc za měsíc vzrostl ${grow.name} (${sg(grow.chg)}).`);
+  lines.push(`Golden Gate: ${fmt(EX.costNow)} z cíle ${fmt(G.goal)} (${num(EX.costNow/G.goal*100,0)} %).`);
+  if (M.balance>0) lines.push(`Hypotéka: zbývá splatit ${fmt(M.balance)}${mNet!=null?", investice minus hypotéka "+fmt(mNet):""}.`);
+  return { total, profit, dep, rows, ref, refTotal, mNet, lines };
+}
+function reportHTML(){
+  const R = reportData(), now = new Date().toLocaleDateString("cs-CZ",{day:"numeric",month:"long",year:"numeric"});
+  let h = `<button class="x noprint" id="dx2">Zavřít</button><h2>Měsíční report</h2><p class="hint" style="margin-top:0">${now}${R.ref?", porovnání s "+new Date(R.ref.date).toLocaleDateString("cs-CZ"):", zatím bez porovnání (chybí starší snapshot)"}</p><div class="kpis">` +
+    kp("Hodnota investic",fmt(R.total)) + (R.refTotal!=null?kp("Změna za měsíc",sg(R.total-R.refTotal)+" ("+pct((R.total-R.refTotal)/R.refTotal*100)+")",cls(R.total-R.refTotal)):"") +
+    kp("Zisk celkem",sg(R.profit)+" ("+pct(R.profit/R.dep*100)+")",cls(R.profit)) + (R.mNet!=null?kp("Investice minus hypotéka",fmt(R.mNet)):"") + `</div>
+    <div class="wrap"><table><tr><th>Položka</th><th>Hodnota</th><th>Změna</th><th>Zisk</th><th>Výnos</th></tr>` +
+    R.rows.map(r=>`<tr><td>${r.name}</td><td>${fmt(r.value)}</td><td class="${r.chg==null?"":cls(r.chg)}">${r.chg==null?"—":sg(r.chg)}</td><td class="${r.profit==null?"":cls(r.profit)}">${r.profit==null?"—":sg(r.profit)}</td><td class="${r.ret==null?"":cls(r.ret)}">${r.ret==null?"—":pct(r.ret)}</td></tr>`).join("") +
+    `</table></div><div style="margin-top:12px">${R.lines.map(l=>`<p style="margin:4px 0">${l}</p>`).join("")}</div>
+    <div class="ctl noprint" style="margin-top:14px"><button class="btn" id="rPrint">Tisk / uložit PDF</button><button class="btn" id="rCopy">Kopírovat text</button></div>`;
+  return h;
+}
+function bindReport(){
+  $("dx2").onclick = () => $("dlg").close(); $("rPrint").onclick = () => window.print();
+  $("rCopy").onclick = async () => { const R = reportData();
+    const t = ["Měsíční report "+new Date().toLocaleDateString("cs-CZ"),"Hodnota investic: "+fmt(R.total),"Zisk celkem: "+sg(R.profit)+" ("+pct(R.profit/R.dep*100)+")",""]
+      .concat(R.rows.map(r=>`${r.name}: ${fmt(r.value)}${r.chg!=null?" ("+sg(r.chg)+")":""}`),[""],R.lines).join("\n");
+    try { await navigator.clipboard.writeText(t); $("rCopy").textContent = "Zkopírováno"; } catch(e){ $("rCopy").textContent = "Nelze kopírovat"; } };
+}
+
+/* --- měsíční aktualizace --- */
+function updForm(){
+  const row = (id,l,v) => `<label>${l}<input type="number" step="0.01" id="u_${id}" value="${v==null?"":v}"></label>`;
+  let h = `<button class="x" id="dx3" onclick="$('dlg').close()">Zavřít</button><h2>Měsíční aktualizace</h2><p class="hint" style="margin-top:0">Přepiš čísla podle aplikací a vygeneruj nový data.json. Ceny kovů se doplní z živého spotu.</p><div class="ctl">`;
+  DATA.metals.forEach(m=>{ h += row(m.id+"_g",m.name+": gramy celkem",+m.grams.toFixed(2)) + row(m.id+"_a",m.name+": Ø cena / "+m.unit,m.avg); });
+  DATA.manual.forEach(a=>{ if (a.funds) a.funds.forEach((f,i)=>{ h += row(a.id+"_f"+i+"v",a.name+", "+f.name+": hodnota",f.value) + row(a.id+"_f"+i+"p",a.name+", "+f.name+": zisk",f.profit); });
+    else h += row(a.id+"_v",a.name+": hodnota",a.value) + row(a.id+"_d",a.name+": vloženo",a.deposits==null?null:+a.deposits.toFixed(2)); });
+  return h + row("mort","Hypotéka: zbývá splatit",(DATA.mortgage||{}).balance) + `</div><button class="btn" id="uGen">Vygenerovat data.json</button><div id="uOut" style="margin-top:12px"></div>`;
+}
+function updGen(){
+  const g = id => { const v = $("u_"+id); return v && v.value!=="" ? +v.value : null; };
+  const N = JSON.parse(JSON.stringify(DATA)), today = iso(Date.now()); N.updated = today;
+  N.metals.forEach(m=>{ m.grams = g(m.id+"_g") ?? m.grams; m.avg = g(m.id+"_a") ?? m.avg; });
+  N.manual.forEach(a=>{
+    if (a.funds) { a.funds.forEach((f,i)=>{ f.value = g(a.id+"_f"+i+"v") ?? f.value; f.profit = g(a.id+"_f"+i+"p") ?? f.profit; }); a.value = +a.funds.reduce((s,f)=>s+f.value,0).toFixed(2); a.asOf = today; }
+    else { a.value = g(a.id+"_v") ?? a.value; const dp = g(a.id+"_d"); if (dp!=null) a.deposits = dp; } });
+  if (g("mort")!=null) { N.mortgage = N.mortgage || {}; N.mortgage.balance = g("mort"); }
+  const old = DATA; DATA = N; const items = build(P); DATA = old;
+  const snap = { date:today, total:Math.round(items.filter(a=>!a.exclude).reduce((s,a)=>s+a.value,0)), items:{}, mortgage:N.mortgage ? N.mortgage.balance : null };
+  items.forEach(a=>{ snap.items[a.id] = { value:Math.round(a.value*100)/100, deposits:a.deposits==null?null:Math.round(a.deposits*100)/100 }; });
+  N.snapshots = (N.snapshots||[]).filter(x=>x.date!==today).concat([snap]);
+  const txt = JSON.stringify(N,null,1), link = DATA.repo ? `https://github.com/${DATA.repo}/edit/main/data.json` : null;
+  $("uOut").innerHTML = `<textarea id="uTxt" rows="9" readonly></textarea><div class="ctl" style="margin-top:8px"><button class="btn" id="uCopy">Kopírovat</button>${link?`<a class="btn" href="${link}" target="_blank" rel="noopener" style="text-decoration:none">Otevřít data.json na GitHubu</a>`:""}</div>
+    <p class="hint">Postup: 1) Kopírovat. 2) Otevři data.json na GitHubu (tužka Edit). 3) Označ vše, vlož, dole Commit changes. Web se obnoví do minuty.</p>`;
+  $("uTxt").value = txt;
+  $("uCopy").onclick = async () => { try { await navigator.clipboard.writeText(txt); $("uCopy").textContent = "Zkopírováno"; } catch(e){ $("uTxt").select(); } };
+}
+
+/* --- hypotéka --- */
+let mortChart = null;
+function amort(B,rate,P,extra,rate2,sw){ let b = B, k = 0, it = 0; const bal = [b];
+  while (b > 0.5 && k < 1200) { const i = b*((k>=sw && rate2!=null ? rate2 : rate)/1200); let pr = P+extra-i; if (pr <= 0) return null; if (pr > b) pr = b; b -= pr; it += i; k++; bal.push(b); }
+  return { months:k, interest:it, bal }; }
+const ym = n => Math.floor(n/12)+" let "+(n%12)+" měs.";
+const keyOf = d => d.getUTCFullYear()*12+d.getUTCMonth();
+function mortUpdate(){
+  const M = DATA.mortgage||{}, w = $("mortWrap");
+  if (!(M.balance>0 && M.payment>0 && M.rate!=null)) { w.innerHTML = `<p class="hint" style="margin:0">Doplň do data.json sekci <code>mortgage</code>: balance (zbývá splatit), rate (úrok % p.a.), payment (měsíční splátka). Volitelně fixedUntil, propertyValue, originalAmount.</p>`; return; }
+  if (!$("mx")) { w.innerHTML = `<div class="ctl"><label>Mimořádná splátka měsíčně (Kč) <input type="number" id="mx" min="0" step="500"></label><label>Sazba po fixaci (% p.a.) <input type="number" id="mr" min="0" step="0.1"></label></div><div class="kpis" id="mortK"></div><div class="bar" id="mortBar" style="display:none"><i></i></div><div class="chart" style="height:260px"><canvas id="mortChart"></canvas></div><p class="hint" id="mortNote"></p>`;
+    $("mx").value = M.extraMonthly||0; $("mx").addEventListener("input",mortUpdate); $("mr").value = M.rate; $("mr").addEventListener("input",mortUpdate); }
+  const x = Math.max(0,+$("mx").value||0), rr = $("mr").value===""?null:+$("mr").value, sw = M.fixedUntil ? Math.max(0,Math.round((Date.parse(M.fixedUntil)-Date.now())/(30.44*864e5))) : 1e9;
+  const base = amort(M.balance,M.rate,M.payment,0,rr,sw), ex = x>0 ? amort(M.balance,M.rate,M.payment,x,rr,sw) : null;
+  if (!base) { $("mortK").innerHTML = kp("Chyba","Splátka nepokryje úroky","down"); return; }
+  const dateAt = k => { const d = new Date(); d.setMonth(d.getMonth()+k); return d; };
+  let k = kp("Zbývá splatit",fmt(M.balance)) + kp("Splátka",fmt(M.payment)) + kp("Úrok",num(M.rate,2)+" % p.a.") +
+    kp("Konec splácení",dateAt(base.months).toLocaleDateString("cs-CZ",{month:"long",year:"numeric"})) + kp("Zbývá",ym(base.months)) + kp("Úroky do konce",fmt(base.interest));
+  if (M.fixedUntil) { const mo = Math.round((Date.parse(M.fixedUntil)-Date.now())/(30.44*864e5)); k += kp("Fixace do",new Date(M.fixedUntil).toLocaleDateString("cs-CZ",{month:"long",year:"numeric"})+(mo>0?" (za "+mo+" měs.)":""),mo<=9?"down":""); }
+  if (M.propertyValue) k += kp("Vlastní kapitál v nemovitosti",fmt(M.propertyValue-M.balance)) + kp("LTV",num(M.balance/M.propertyValue*100,0)+" %");
+  if (EX) k += kp("Investice minus hypotéka",fmt(EX.total-M.balance),cls(EX.total-M.balance)) + (M.propertyValue?kp("Čistý majetek s nemovitostí",fmt(EX.total+M.propertyValue-M.balance)):"");
+  if (M.interestPaid) k += kp("Zaplaceno na úrocích dosud",fmt(M.interestPaid));
+  if (ex) k += kp("Mimořádná splátka: kratší o",ym(base.months-ex.months)) + kp("Mimořádná splátka: ušetříš na úrocích",fmt(base.interest-ex.interest),"up");
+  $("mortK").innerHTML = k;
+  if (M.originalAmount>0) { $("mortBar").style.display = ""; $("mortBar").firstChild.style.width = Math.min(100,(1-M.balance/M.originalAmount)*100)+"%"; }
+  $("mortNote").textContent = M.fixedUntil && (Date.parse(M.fixedUntil)-Date.now()) < 9*30.44*864e5 ? "Blíží se konec fixace. Zvaž včas refinancování nebo vyjednání nové sazby." : "Stav jistiny k "+(M.asOf?new Date(M.asOf).toLocaleDateString("cs-CZ"):"dnešku")+". Po fixaci se počítá zadaná sazba a splátka zůstává stejná, mění se doba splácení. Banka ji může přepočítat jinak.";
+  const H = (M.history||[]).map(h=>({k:keyOf(new Date(h.date)),b:h.balance})), nowK = keyOf(new Date()), k0 = H.length ? H[0].k : nowK, kEnd = nowK+base.bal.length;
+  const act = new Map(H.map(h=>[h.k,h.b])), lastAct = H.length ? H[H.length-1] : null, ks = [];
+  for (let q = k0; q <= kEnd; q++) ks.push(q);
+  const line = fn => ks.map(fn);
+  if (mortChart) mortChart.destroy();
+  mortChart = new Chart($("mortChart"),{ type:"line", data:{labels:ks.map(q=>mlab(Date.UTC(Math.floor(q/12),q%12,1))),datasets:[
+      {label:"Skutečnost",data:line(q=>act.has(q)?act.get(q):null),borderColor:"#b23a2e",backgroundColor:"#b23a2e22",fill:true,pointRadius:0,borderWidth:2,spanGaps:true},
+      {label:"Prognóza",data:line(q=>q>=nowK?base.bal[q-nowK]:(lastAct&&q===lastAct.k?lastAct.b:null)),borderColor:"#b23a2e",borderDash:[5,4],pointRadius:0,borderWidth:2,spanGaps:true},
+      ...(ex?[{label:"S mimořádnou splátkou",data:line(q=>q>=nowK?ex.bal[q-nowK]??0:(lastAct&&q===lastAct.k?lastAct.b:null)),borderColor:V("--up"),pointRadius:0,borderWidth:2,spanGaps:true}]:[])]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{grid:{color:V("--line")},border:{display:false},ticks:{callback:tick}}},plugins:{legend:{position:"bottom"},tooltip:tip}}});
+}
+
 async function init(){
   try { DATA = await getJSON("data.json",{cache:"no-store"}); }
   catch(e){ document.body.innerHTML = "<main><h1>Nelze načíst data.json</h1><p class='sub'>Na GitHub Pages musí být vedle index.html i soubor data.json. Lokálně spusť <code>python -m http.server</code> a otevři localhost.</p></main>"; return; }
   try { HIST = await getJSON("history.json",{cache:"no-store"}); } catch(e){}
+  $("bRep").onclick = () => openDlg(reportHTML(),bindReport);
+  $("bUpd").onclick = () => openDlg(updForm(),()=>{ $("uGen").onclick = updGen; });
   $("pm").value = DATA.gg.monthly; $("tm").value = DATA.tax.dpsMonthly; $("td").value = DATA.tax.dipMonthly; $("te").value = DATA.tax.dipEmployerMonthly||0;
   ["pm","pg"].forEach(id=>$(id).addEventListener("input",projUpdate));
   ["tm","td","te","tr"].forEach(id=>$(id).addEventListener("input",taxUpdate));
