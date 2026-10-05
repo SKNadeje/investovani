@@ -158,8 +158,8 @@ let P = null, ITEMS = [], ROWS = [];
 function build(p){
   const live = p && p.fx;
   const metals = DATA.metals.map(m=>{
-    const cost = m.grams/m.per*m.avg, px = live && p.usd[m.symbol];
-    return { ...m, kind:"metal", deposits:cost, value: px ? m.grams/OZ*px*p.fx : cost, spot: px ? px*p.fx : null, note: px ? "" : " (bez živé ceny)" };
+    const cost = m.grams/m.per*m.avg, px = live && p.usd[m.symbol], kk = 1+(m.premium||0)/100;
+    return { ...m, kind:"metal", deposits:cost, value: px ? m.grams/OZ*px*p.fx*kk : cost, spot: px ? px*p.fx*kk : null, note: px ? "" : " (bez živé ceny)" };
   });
   const man = DATA.manual.map(a=>{
     const it = { ...a };
@@ -179,7 +179,7 @@ function detail(it){
   if (pr!=null) h += kp("Vloženo",fmt(it.deposits)) + kp("Zisk",sg(pr)+" ("+pct(pr/it.deposits*100)+")",cls(pr));
   if (it.kind==="metal") {
     h += kp("Množství",num(it.grams,2)+" g ("+num(it.grams/OZ,3)+" oz)") + kp("Ø nákupní cena / "+it.unit,fmt(it.avg));
-    if (it.spot) { const s = it.spot/OZ*it.per; h += kp("Spot / "+it.unit,fmt(s)) + kp("Spot oproti Ø nákupní",pct((s/it.avg-1)*100),cls(s-it.avg)); }
+    if (it.spot) { const s = it.spot/OZ*it.per; h += kp("Cena k ocenění / "+it.unit,fmt(s)) + kp("Oproti Ø nákupní",pct((s/it.avg-1)*100),cls(s-it.avg)) + (it.premium?kp("Přirážka k spotu",pct(it.premium)):""); }
   }
   (it.funds||[]).forEach(f=>{
     if (f.pct==null) { h += kp(f.name,fmt(f.value)); return; }
@@ -256,7 +256,7 @@ function render(p){
 
   $("updated").textContent = "Ruční údaje k " + new Date(DATA.updated).toLocaleDateString("cs-CZ",{day:"numeric",month:"long",year:"numeric"});
   $("status").textContent = live
-    ? "Živé ceny (spot): zlato " + fmt(p.usd.XAU*p.fx) + " / oz, stříbro " + fmt((p.usd.XAG||0)*p.fx) + " / oz, kurz " + p.fx.toFixed(2).replace(".",",") + " Kč/USD." + (p.usd.XAU>0 && p.usd.XAG>0 ? " Poměr zlato/stříbro " + num(p.usd.XAU/p.usd.XAG,1) + "." : "")
+    ? "Živé ceny (spot): zlato " + fmt(p.usd.XAU*p.fx) + " / oz, stříbro " + fmt((p.usd.XAG||0)*p.fx) + " / oz, kurz " + p.fx.toFixed(2).replace(".",",") + " Kč/USD." + (DATA.metals.some(m=>m.premium) ? " Ocenění s přirážkou: "+DATA.metals.filter(m=>m.premium).map(m=>m.name.toLowerCase()+" "+pct(m.premium)).join(", ")+"." : "") + (p.usd.XAU>0 && p.usd.XAG>0 ? " Poměr zlato/stříbro " + num(p.usd.XAU/p.usd.XAG,1) + "." : "")
     : "Živé ceny se nepodařilo načíst, zlato a stříbro jsou zatím oceněny nákupní cenou.";
 
   const card = (it,total) => {
@@ -338,7 +338,7 @@ function metalsHistory(gold,silv){
   const liveOK = P && P.fx && P.usd.XAU > 0 && P.usd.XAG > 0;
   const rows = pts.map(t=>{ const h = holdAt(a,t), p = priceAt(t), live = t === now && liveOK;
     const xau = live ? P.usd.XAU : p[1], xag = live ? P.usd.XAG : p[2], fx = live ? P.fx : p[3];
-    return { gv:h.g/OZ*xau*fx, sv:h.s/OZ*xag*fx, c:h.c }; });
+    return { gv:h.g/OZ*xau*fx*(1+(DATA.metals[0].premium||0)/100), sv:h.s/OZ*xag*fx*(1+(DATA.metals[1].premium||0)/100), c:h.c }; });
   const tt = {callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.parsed.y)}`,footer:i=>{ const x = i.filter(z=>z.dataset.stack==="v").reduce((s,z)=>s+z.parsed.y,0); return "Hodnota celkem: "+fmt(x); }}};
   mk(charts,"mhChart",{ type:"line", data:{labels:pts.map(mlab),datasets:[
       {label:"Zlato",data:rows.map(r=>r.gv),borderColor:DATA.metals[0].color,backgroundColor:DATA.metals[0].color+"aa",fill:true,pointRadius:0,borderWidth:1.5,stack:"v"},
@@ -470,7 +470,7 @@ function bindReport(){
 function updForm(){
   const row = (id,l,v) => `<label>${l}<input type="number" step="0.01" id="u_${id}" value="${v==null?"":v}"></label>`;
   let h = `<button class="x" id="dx3" onclick="$('dlg').close()">Zavřít</button><h2>Měsíční aktualizace</h2><p class="hint" style="margin-top:0">Přepiš čísla podle aplikací a vygeneruj nový data.json. Ceny kovů se doplní z živého spotu.</p><div class="ctl">`;
-  DATA.metals.forEach(m=>{ h += row(m.id+"_g",m.name+": gramy celkem",+m.grams.toFixed(2)) + row(m.id+"_a",m.name+": Ø cena / "+m.unit,m.avg); });
+  DATA.metals.forEach(m=>{ h += row(m.id+"_g",m.name+": gramy celkem",+m.grams.toFixed(2)) + row(m.id+"_a",m.name+": Ø cena / "+m.unit,m.avg) + row(m.id+"_p",m.name+": přirážka k spotu (%)",m.premium||0); });
   DATA.manual.forEach(a=>{ if (a.funds) a.funds.forEach((f,i)=>{ h += row(a.id+"_f"+i+"v",a.name+", "+f.name+": hodnota",f.value) + row(a.id+"_f"+i+"p",a.name+", "+f.name+": zisk",f.profit); });
     else h += row(a.id+"_v",a.name+": hodnota",a.value) + row(a.id+"_d",a.name+": vloženo",a.deposits==null?null:+a.deposits.toFixed(2)); });
   return h + row("mort","Hypotéka: zbývá splatit",(DATA.mortgage||{}).balance) + `</div><button class="btn" id="uGen">Vygenerovat data.json</button><div id="uOut" style="margin-top:12px"></div>`;
@@ -478,7 +478,7 @@ function updForm(){
 function updGen(){
   const g = id => { const v = $("u_"+id); return v && v.value!=="" ? +v.value : null; };
   const N = JSON.parse(JSON.stringify(DATA)), today = iso(Date.now()); N.updated = today;
-  N.metals.forEach(m=>{ m.grams = g(m.id+"_g") ?? m.grams; m.avg = g(m.id+"_a") ?? m.avg; });
+  N.metals.forEach(m=>{ m.grams = g(m.id+"_g") ?? m.grams; m.avg = g(m.id+"_a") ?? m.avg; m.premium = g(m.id+"_p") ?? m.premium; });
   N.manual.forEach(a=>{
     if (a.funds) { a.funds.forEach((f,i)=>{ f.value = g(a.id+"_f"+i+"v") ?? f.value; f.profit = g(a.id+"_f"+i+"p") ?? f.profit; }); a.value = +a.funds.reduce((s,f)=>s+f.value,0).toFixed(2); a.asOf = today; }
     else { a.value = g(a.id+"_v") ?? a.value; const dp = g(a.id+"_d"); if (dp!=null) a.deposits = dp; } });
