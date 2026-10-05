@@ -9,7 +9,8 @@
    "grams": 106.0605,
    "avg": 57646,
    "per": 31.1035,
-   "unit": "oz"
+   "unit": "oz",
+   "premium": 0
   },
   {
    "id": "silver",
@@ -19,7 +20,8 @@
    "grams": 1134.71,
    "avg": 29611,
    "per": 1000,
-   "unit": "kg"
+   "unit": "kg",
+   "premium": 0
   }
  ],
  "manual": [
@@ -383,7 +385,7 @@
   ],
   "monthly": 3000
  },
- "_napoveda": "Tvoje data. Měsíčně použij na webu tlačítko Měsíční aktualizace, vygeneruje nový data.json. mortgage: balance = zbývá splatit (Kč), rate = úrok % p.a., payment = měsíční splátka, fixedUntil = 'YYYY-MM-DD', propertyValue = hodnota nemovitosti, originalAmount = původní výše úvěru.",
+ "_napoveda": "Tvoje data. Měsíčně použij na webu tlačítko Měsíční aktualizace, vygeneruje nový data.json. mortgage: balance = zbývá splatit (Kč), rate = úrok % p.a., payment = měsíční splátka, fixedUntil = 'YYYY-MM-DD', propertyValue = hodnota nemovitosti, originalAmount = původní výše úvěru. metals[].premium = přirážka (%) k spotové ceně pro ocenění, např. aby cena sedla na prodejní cenu Golden Gate.",
  "tax": {
   "dpsMonthly": 1000,
   "dipMonthly": 200,
@@ -396,7 +398,7 @@
   "2023": 10.7,
   "2024": 2.4
  },
- "repo": "SKNadeje/investice",
+ "repo": "SKNadeje/investovani",
  "snapshots": [],
  "mortgage": {
   "balance": 3081158.91,
