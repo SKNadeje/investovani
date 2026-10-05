@@ -383,8 +383,7 @@
   ],
   "monthly": 3000
  },
- "history": [],
- "_napoveda": "Soubor s tvými daty. Hodnoty uprav přímo tady (GitHub: tužka Edit). value = aktuální hodnota v Kč, deposits = vloženo, flows = jednotlivé vklady, hist = měsíční snapshoty {date,value,deposits}, exclude:true = mimo Celkem.",
+ "_napoveda": "Tvoje data. Měsíčně použij na webu tlačítko Měsíční aktualizace, vygeneruje nový data.json. mortgage: balance = zbývá splatit (Kč), rate = úrok % p.a., payment = měsíční splátka, fixedUntil = 'YYYY-MM-DD', propertyValue = hodnota nemovitosti, originalAmount = původní výše úvěru.",
  "tax": {
   "dpsMonthly": 1000,
   "dipMonthly": 200,
@@ -396,5 +395,112 @@
   "2022": 15.1,
   "2023": 10.7,
   "2024": 2.4
+ },
+ "repo": "SKNadeje/investice",
+ "snapshots": [],
+ "mortgage": {
+  "balance": 3081158.91,
+  "asOf": "2026-09-30",
+  "rate": 4.29,
+  "payment": 15728,
+  "fixedUntil": "2027-11-30",
+  "originalAmount": 4170000,
+  "propertyValue": null,
+  "extraMonthly": 0,
+  "interestPaid": 310572.51,
+  "history": [
+   {
+    "date": "2024-11-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2024-12-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2025-01-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2025-02-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2025-03-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2025-04-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2025-05-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2025-06-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2025-07-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2025-08-28",
+    "balance": 4170000.0
+   },
+   {
+    "date": "2025-09-30",
+    "balance": 3127500.0
+   },
+   {
+    "date": "2025-10-31",
+    "balance": 3127500.0
+   },
+   {
+    "date": "2025-11-30",
+    "balance": 3125864.55
+   },
+   {
+    "date": "2025-12-31",
+    "balance": 3121314.24
+   },
+   {
+    "date": "2026-01-28",
+    "balance": 3117124.49
+   },
+   {
+    "date": "2026-02-28",
+    "balance": 3112918.66
+   },
+   {
+    "date": "2026-03-28",
+    "balance": 3107584.45
+   },
+   {
+    "date": "2026-04-28",
+    "balance": 3103345.28
+   },
+   {
+    "date": "2026-05-28",
+    "balance": 3098718.81
+   },
+   {
+    "date": "2026-06-28",
+    "balance": 3094445.71
+   },
+   {
+    "date": "2026-07-28",
+    "balance": 3089787.48
+   },
+   {
+    "date": "2026-08-28",
+    "balance": 3085481.44
+   },
+   {
+    "date": "2026-09-28",
+    "balance": 3081158.91
+   }
+  ]
  }
 }
