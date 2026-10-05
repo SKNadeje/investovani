@@ -47,7 +47,7 @@
    "id": "penze",
    "name": "Penzijko",
    "color": "#5b5fa8",
-   "value": 260630,
+   "value": 260628.13,
    "deposits": null,
    "hist": [],
    "flows": [],
@@ -55,19 +55,17 @@
     {
      "name": "Vyvážený fond",
      "pct": 18.5,
-     "value": 8790.31
+     "value": 56236.37,
+     "profit": 8780.31
     },
     {
      "name": "Dynamický fond",
      "pct": 30.46,
-     "value": 47721.83
-    },
-    {
-     "name": "Převedeno z Generali",
-     "pct": null,
-     "value": 204117.86
+     "value": 204391.76,
+     "profit": 47721.83
     }
-   ]
+   ],
+   "asOf": "2026-09-29"
   },
   {
    "id": "dip",
