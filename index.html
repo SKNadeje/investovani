@@ -111,6 +111,8 @@ textarea{width:100%;font:12px/1.4 ui-monospace,monospace;background:var(--bg);co
     <div class="kpis" id="taxK"></div><p class="hint" id="taxNote"></p>
   </section>
 
+  <section class="card" style="margin-top:16px" id="edgoals"><h2>Edward: plán a cíle</h2><div class="kpis" id="edK"></div><div class="wrap"><table id="edT"></table></div><p class="hint" id="edN"></p></section>
+
   <section class="card" style="margin-top:16px" id="mortgage"><h2>Hypotéka</h2><div id="mortWrap"></div></section>
 
   <footer>Zlato a stříbro se oceňuje podle spotové ceny (výkup u obchodníka bývá nižší). Řádek 2026* je odhad z průměrných cen. Data uprav v souboru <code>data.json</code>.</footer>
@@ -192,6 +194,14 @@ function detail(it){
     const t = it.parts.reduce((s,x)=>s+x.v,0);
     h += `<h2>Skladba hodnoty</h2><div class="stack">${it.parts.map(x=>`<i title="${x.l}" style="width:${x.v/t*100}%;background:${x.c}"></i>`).join("")}</div>
       <div class="leg">${it.parts.map(x=>`<span><span class="dot" style="display:inline-block;background:${x.c}"></span> ${x.l}: ${fmt(x.v)} (${num(x.v/t*100)} %)</span>`).join("")}</div>`;
+  }
+  const X = it.extra;
+  if (X) {
+    if (X.kpis) h += `<div class="kpis">` + X.kpis.map(k=>kp(k.l,k.t==="pct"?pct(k.v):k.t==="sg"?sg(k.v):k.t==="txt"?k.v:fmt(k.v),k.t==="pct"||k.t==="sg"?cls(k.v):"")).join("") + `</div>`;
+    if (X.table) { const T = X.table, f = (v,t) => v==null ? "—" : t==="czk" ? fmt(v) : t==="sg" ? sg(v) : t==="pct" ? pct(v) : v;
+      h += `<h2 style="margin-top:14px">${T.title}</h2><div class="wrap"><table><tr>${T.cols.map(c=>`<th>${c.h}</th>`).join("")}</tr>` +
+        T.rows.map(r=>`<tr>${r.map((v,i)=>`<td class="${(T.cols[i].t==="sg"||T.cols[i].t==="pct")&&v!=null?cls(v):""}">${f(v,T.cols[i].t)}</td>`).join("")}</tr>`).join("") + `</table></div>`; }
+    (X.notes||[]).forEach(n=>{ h += `<p class="hint">${n}</p>`; });
   }
   if (it.funds && it.funds.some(f=>f.value==null)) h += `<p class="hint">Pro přesný zisk penzijka doplň do <code>funds</code> hodnotu každého fondu v Kč.</p>`;
   h += `<h2 style="margin-top:18px">${it.kind==="metal"?"Vývoj množství a nákupní ceny":"Vývoj hodnoty"}</h2>`;
@@ -327,7 +337,7 @@ function extras(){
   EX = { costNow: gold.deposits+silv.deposits, valNow: gold.value+silv.value, total: ITEMS.filter(a=>!a.exclude).reduce((t,a)=>t+a.value,0) };
   if (HIST && HIST.daily && HIST.daily.length) metalsHistory(gold,silv);
   else $("mhWrap").innerHTML = `<p class="hint">Historické ceny zatím nejsou. V GitHubu spusť Actions → Deploy Pages → Run workflow, soubor <code>history.json</code> se vytvoří sám a každý den se obnoví.</p>`;
-  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); mortUpdate();
+  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); edwardGoals(); mortUpdate();
 }
 
 function metalsHistory(gold,silv){
@@ -420,8 +430,18 @@ function trend(id,val,color){
   let h = ""; if (rv!=null) { const dd = val-rv; h += `<div class="delta ${cls(dd)}">${sg(dd)} od ${new Date(ref.date).toLocaleDateString("cs-CZ",{day:"numeric",month:"numeric"})}</div>`; }
   return h + (vals.length>=2 ? spark(vals,color) : ""); }
 
+function edwardGoals(){
+  const E = DATA.edward; if (!E) { $("edgoals").style.display = "none"; return; }
+  const p = E.plan, rs = E.reports, pc = v => v>=80 ? "up" : v>=60 ? "" : "down";
+  $("edK").innerHTML = kp("Pravidelný vklad",fmt(p.monthlyDeposit)+" měsíčně") + kp("Pohotovostní rezerva",fmt(p.reserve)) + kp("Cílové odměny",fmt(p.bonusYearly)+" ročně") +
+    kp("Renta od "+p.pensionStart.split("-").reverse().join("/"),fmt(p.pensionRent)+" z potřebných "+fmt(p.pensionNeeded)+" ("+num(p.pensionRent/p.pensionNeeded*100,0)+" %)",p.pensionRent<p.pensionNeeded?"down":"up") +
+    kp("Očekávaný majetek při začátku renty",fmt(p.projectedAtStart));
+  $("edT").innerHTML = `<tr><th>Cíl</th><th>Částka</th><th>Kdy</th>${rs.map(r=>`<th>${r.slice(5)}/${r.slice(0,4)}</th>`).join("")}</tr>` +
+    E.goals.map(g=>`<tr><td>${g.name}</td><td>${fmt(g.amount)}</td><td>${g.when}</td>${rs.map(r=>{ const v = g.prob[r]; return `<td class="${v==null?"":pc(v)}">${v==null?"—":v+" %"}</td>`; }).join("")}</tr>`).join("");
+  $("edN").textContent = "Pravděpodobnost splnění cíle podle Edwardu. " + E.note;
+}
 function totalChart(){
-  const S = DATA.snapshots||[], wrap = $("totWrap");
+  const S = (DATA.snapshots||[]).filter(x=>x.total!=null), wrap = $("totWrap");
   if (!S.length) { wrap.innerHTML = `<p class="hint" style="margin:0">Graf se objeví po prvním uložení snapshotu: klikni na Měsíční aktualizace, vyplň čísla a nahraj vygenerovaný data.json. Od druhého záznamu uvidíš vývoj.</p>`; return; }
   const M = (DATA.mortgage||{}).balance, pts = S.map(x=>({d:x.date,t:x.total,m:x.mortgage})).concat([{d:iso(Date.now()),t:EX.total,m:M==null?null:M}]);
   const net = pts.some(p=>p.m!=null);
