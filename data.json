@@ -153,7 +153,155 @@
      "profit": 47721.83
     }
    ],
-   "asOf": "2026-09-29"
+   "asOf": "2026-09-29",
+   "carriedGain": 41808.4,
+   "extra": {
+    "kpis": [
+     {
+      "l": "Převod z Generali (7/2024)",
+      "v": 148828.4,
+      "t": "czk"
+     },
+     {
+      "l": "Strategie spoření",
+      "v": "Vyvážený 25 % / Dynamický 75 %",
+      "t": "txt"
+     },
+     {
+      "l": "Sjednaný příspěvek",
+      "v": "1 000 Kč měsíčně",
+      "t": "txt"
+     },
+     {
+      "l": "Poplatky fondů",
+      "v": "1 % správa + 15 % ze zhodnocení",
+      "t": "txt"
+     },
+     {
+      "l": "Zhodnocení 2025 (výpis)",
+      "v": 14.58,
+      "t": "pct"
+     },
+     {
+      "l": "Spoření od",
+      "v": "1. 7. 2024",
+      "t": "txt"
+     }
+    ],
+    "tables": [
+     {
+      "title": "Roční výpisy ČS penzijní společnosti",
+      "cols": [
+       {
+        "h": "Rok",
+        "t": "txt"
+       },
+       {
+        "h": "Zůstatek 31. 12.",
+        "t": "czk"
+       },
+       {
+        "h": "Účastník",
+        "t": "czk"
+       },
+       {
+        "h": "Zaměstnavatel",
+        "t": "czk"
+       },
+       {
+        "h": "Stát",
+        "t": "czk"
+       },
+       {
+        "h": "Zhodnocení",
+        "t": "sg"
+       },
+       {
+        "h": "Zhodnocení %",
+        "t": "pct"
+       }
+      ],
+      "rows": [
+       [
+        "2024",
+        162853.44,
+        6000,
+        4800,
+        600,
+        2125.04,
+        1.32
+       ],
+       [
+        "2025",
+        217228.14,
+        12000,
+        12600,
+        2400,
+        27374.7,
+        14.58
+       ]
+      ]
+     },
+     {
+      "title": "Fondy (výpis k 31. 12. 2025)",
+      "cols": [
+       {
+        "h": "Fond",
+        "t": "txt"
+       },
+       {
+        "h": "Hodnota",
+        "t": "czk"
+       },
+       {
+        "h": "Výkon 2025",
+        "t": "pct"
+       },
+       {
+        "h": "Od vzniku fondu",
+        "t": "pct"
+       }
+      ],
+      "rows": [
+       [
+        "Vyvážený",
+        51988.95,
+        10.93,
+        73.06
+       ],
+       [
+        "Dynamický",
+        165236.96,
+        17.01,
+        140.17
+       ],
+       [
+        "Konzervativní (nedržíš)",
+        null,
+        2.62,
+        15.91
+       ],
+       [
+        "Etický (nedržíš)",
+        null,
+        4.03,
+        21.77
+       ],
+       [
+        "Fond pro budoucnost (nedržíš)",
+        null,
+        4.25,
+        4.25
+       ]
+      ]
+     }
+    ],
+    "notes": [
+     "Do převodu z Generali (148 828 Kč) se počítají i dřívější výnosy 41 808 Kč. Evidence ČS i aplikace je berou jako vklad, proto je zisk na kartě nižší než skutečný zisk uvedený výše.",
+     "Zaměstnavatel přispíval 800 Kč měsíčně do února 2025, od března 2025 1 100 Kč. Státní příspěvek je 200 Kč měsíčně (vyplácí se čtvrtletně po 600 Kč).",
+     "Další roční výpis přidej jako řádek do první tabulky v data.json."
+    ]
+   }
   },
   {
    "id": "dip",
@@ -161,7 +309,12 @@
    "color": "#c0623f",
    "value": 3694.71,
    "deposits": 3706,
-   "hist": []
+   "hist": [],
+   "extra": {
+    "notes": [
+     "DIP máš od července 2026, historie zatím není. Plní se v Měsíční aktualizaci."
+    ]
+   }
   },
   {
    "id": "syn",
@@ -493,6 +646,10 @@
     "edward": {
      "value": 20300.9,
      "deposits": 20000.0
+    },
+    "penze": {
+     "value": 162853.44,
+     "deposits": 160728.4
     }
    },
    "mortgage": null
@@ -504,6 +661,10 @@
     "edward": {
      "value": 348333.66,
      "deposits": 321900.0
+    },
+    "penze": {
+     "value": 217228.14,
+     "deposits": 187728.4
     }
    },
    "mortgage": null
@@ -515,6 +676,10 @@
     "edward": {
      "value": 343924.0,
      "deposits": 302660.0
+    },
+    "penze": {
+     "value": 260628.13,
+     "deposits": 204125.99
     }
    },
    "mortgage": null
@@ -527,7 +692,7 @@
   "payment": 15728,
   "fixedUntil": "2027-11-30",
   "originalAmount": 4170000,
-  "propertyValue": null,
+  "propertyValue": 4500000,
   "extraMonthly": 0,
   "interestPaid": 310572.51,
   "history": [
@@ -623,7 +788,9 @@
     "date": "2026-09-28",
     "balance": 3081158.91
    }
-  ]
+  ],
+  "propertyArea": 82,
+  "propertyNote": "byt po kompletní rekonstrukci, 82 m², Trutnov – Krýblice"
  },
  "edward": {
   "reports": [
