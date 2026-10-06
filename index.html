@@ -189,6 +189,7 @@ function detail(it){
     if (f.value!=null) { const g = f.profit!=null ? f.profit : f.value-f.value/(1+f.pct/100); h += kp(f.name+": hodnota",fmt(f.value)) + kp(f.name+": zisk",sg(g),cls(g)); } });
   if (it.funds && it.funds.every(f=>f.value!=null)) { const rest = it.value-it.funds.reduce((s,f)=>s+f.value,0); if (Math.abs(rest)>1) h += kp("Mimo uvedené fondy",fmt(rest)); }
   if (it.flowsSum) h += kp("Zapsané vklady",fmt(it.flowsSum));
+  if (it.carriedGain && it.deposits!=null) { const tg = pr+it.carriedGain; h += kp("Zisk vč. výnosů z předchozí společnosti",sg(tg)+" ("+pct(tg/(it.deposits-it.carriedGain)*100)+")",cls(tg)); }
   h += `</div>`;
   if (it.parts) {
     const t = it.parts.reduce((s,x)=>s+x.v,0);
@@ -198,7 +199,7 @@ function detail(it){
   const X = it.extra;
   if (X) {
     if (X.kpis) h += `<div class="kpis">` + X.kpis.map(k=>kp(k.l,k.t==="pct"?pct(k.v):k.t==="sg"?sg(k.v):k.t==="txt"?k.v:fmt(k.v),k.t==="pct"||k.t==="sg"?cls(k.v):"")).join("") + `</div>`;
-    if (X.table) { const T = X.table, f = (v,t) => v==null ? "—" : t==="czk" ? fmt(v) : t==="sg" ? sg(v) : t==="pct" ? pct(v) : v;
+    for (const T of (X.tables || (X.table ? [X.table] : []))) { const f = (v,t) => v==null ? "—" : t==="czk" ? fmt(v) : t==="sg" ? sg(v) : t==="pct" ? pct(v) : v;
       h += `<h2 style="margin-top:14px">${T.title}</h2><div class="wrap"><table><tr>${T.cols.map(c=>`<th>${c.h}</th>`).join("")}</tr>` +
         T.rows.map(r=>`<tr>${r.map((v,i)=>`<td class="${(T.cols[i].t==="sg"||T.cols[i].t==="pct")&&v!=null?cls(v):""}">${f(v,T.cols[i].t)}</td>`).join("")}</tr>`).join("") + `</table></div>`; }
     (X.notes||[]).forEach(n=>{ h += `<p class="hint">${n}</p>`; });
@@ -275,12 +276,12 @@ function render(p){
       : dep==null ? `<div class="chg" style="color:var(--mute)">vklady neznámé</div>`
       : `<div class="chg ${cls(d)}">${sg(d)} (${pct(d/dep*100)})</div>`;
     const inner = `<div class="name"><span class="dot" style="background:${it.color}"></span>${it.name}${it.exclude?" (mimo celkem)":""}</div><div class="big">${fmt(it.value)}</div>${sub}${trend(it.id||"total",it.value,it.color||V("--ink"))}`;
-    return total ? `<div class="card total">${inner}</div>` : `<button class="card" data-id="${it.id}">${inner}</button>`;
+    return total ? `<button class="card total" data-total="1">${inner}</button>` : `<button class="card" data-id="${it.id}">${inner}</button>`;
   };
   const Mg = DATA.mortgage || {};
   const mcard = Mg.balance>0 ? `<button class="card" data-scroll="mortgage"><div class="name"><span class="dot" style="background:#b23a2e"></span>Hypotéka</div><div class="big">${fmt(Mg.balance)}</div><div class="chg" style="color:var(--mute)">${Mg.payment?fmt(Mg.payment)+" měsíčně":"zbývá splatit"}${Mg.rate!=null?", úrok "+num(Mg.rate,2)+" %":""}</div></button>` : "";
   $("cards").innerHTML = card({name:"Celkem",color:V("--ink"),value:totalVal},true) + ITEMS.map(a=>card(a)).join("") + mcard;
-  $("cards").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.scroll ? $(b.dataset.scroll).scrollIntoView({behavior:"smooth"}) : showItem(b.dataset.id));
+  $("cards").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.total ? showTotal() : b.dataset.scroll ? $(b.dataset.scroll).scrollIntoView({behavior:"smooth"}) : showItem(b.dataset.id));
 
   $("table").innerHTML = `<tr><th>Položka</th><th>Vloženo</th><th>Hodnota</th><th>Zisk</th><th>Výnos</th><th>Podíl</th></tr>` +
     ITEMS.map(a=>{ const d=a.deposits, pr=d==null?null:a.value-d, c=pr==null?"":cls(pr);
@@ -349,6 +350,7 @@ function metalsHistory(gold,silv){
   const rows = pts.map(t=>{ const h = holdAt(a,t), p = priceAt(t), live = t === now && liveOK;
     const xau = live ? P.usd.XAU : p[1], xag = live ? P.usd.XAG : p[2], fx = live ? P.fx : p[3];
     return { gv:h.g/OZ*xau*fx*(1+(DATA.metals[0].premium||0)/100), sv:h.s/OZ*xag*fx*(1+(DATA.metals[1].premium||0)/100), c:h.c }; });
+  EX.mrows = { pts, rows };
   const tt = {callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.parsed.y)}`,footer:i=>{ const x = i.filter(z=>z.dataset.stack==="v").reduce((s,z)=>s+z.parsed.y,0); return "Hodnota celkem: "+fmt(x); }}};
   mk(charts,"mhChart",{ type:"line", data:{labels:pts.map(mlab),datasets:[
       {label:"Zlato",data:rows.map(r=>r.gv),borderColor:DATA.metals[0].color,backgroundColor:DATA.metals[0].color+"aa",fill:true,pointRadius:0,borderWidth:1.5,stack:"v"},
@@ -450,6 +452,46 @@ function totalChart(){
       ...(net?[{label:"Investice minus hypotéka",data:pts.map(p=>p.m==null?null:p.t-p.m),borderColor:V("--ink"),borderDash:[5,4],pointRadius:2,spanGaps:true}]:[])]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},scales:sc(),plugins:{legend:{position:"bottom"},tooltip:tip}}}); }
 
+/* --- Celkem: detail a graf zisku/ztráty --- */
+function showTotal(){
+  const mine = ITEMS.filter(a=>!a.exclude), known = mine.filter(a=>a.deposits!=null), M = DATA.mortgage||{};
+  const val = mine.reduce((s,a)=>s+a.value,0), kd = known.reduce((s,a)=>s+a.deposits,0), pr = known.reduce((s,a)=>s+a.value-a.deposits,0);
+  let h = `<h2>Celkem</h2><div class="kpis">` + kp("Hodnota investic",fmt(val)) + kp("Vloženo",fmt(kd)) + kp("Zisk celkem",sg(pr)+" ("+pct(pr/kd*100)+")",cls(pr));
+  if (M.balance>0) h += kp("Hypotéka",fmt(M.balance)) + (M.propertyValue ? kp("Čistý majetek s nemovitostí",fmt(val+M.propertyValue-M.balance)) : "");
+  h += `</div><h2>Zisk a ztráta po položkách</h2><div class="chart" style="height:${60+known.length*36}px"><canvas id="dcA"></canvas></div>
+    <h2 style="margin-top:18px">Vývoj zisku v čase</h2><div class="chart" style="height:280px"><canvas id="dcB"></canvas></div><p class="hint" id="dcN"></p>`;
+  openDlg(h,()=>totalCharts(known));
+}
+function totalCharts(known){
+  const pf = a => a.value-a.deposits;
+  mk(dcharts,"dcA",{ type:"bar", data:{labels:known.map(a=>a.name),datasets:[{data:known.map(pf),backgroundColor:known.map(a=>pf(a)>=0?V("--up"):V("--down"))}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:V("--line")},border:{display:false},ticks:{callback:tick}},y:{grid:{display:false}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.parsed.x)}}}}});
+  const nowK = keyOf(new Date()), k0 = keyOf(new Date(Date.UTC(2020,9,1))), ks = []; for (let q = k0; q <= nowK; q++) ks.push(q);
+  const ser = () => new Array(ks.length).fill(null), put = (arr,d,v) => { const i = keyOf(new Date(d))-k0; if (i >= 0 && i < arr.length) arr[i] = v; };
+  const S = DATA.snapshots||[], ex = Object.fromEntries(ITEMS.map(a=>[a.id,a.exclude])), tot = ser(), ed = ser(), me = ser(), pz = ser();
+  S.forEach(s=>{
+    if (s.total!=null) { let p = 0; Object.entries(s.items).forEach(([id,x])=>{ if (!ex[id] && x.deposits!=null) p += x.value-x.deposits; }); put(tot,s.date,p); }
+    const e = s.items.edward; if (e && e.deposits!=null) put(ed,s.date,e.value-e.deposits);
+    const pn = s.items.penze; if (pn && pn.deposits!=null) put(pz,s.date,pn.value-pn.deposits); });
+  const edw = ITEMS.find(x=>x.id==="edward"), pen = ITEMS.find(x=>x.id==="penze");
+  if (EX && EX.mrows) EX.mrows.pts.forEach((t,i)=>{ const r = EX.mrows.rows[i]; put(me,t,r.gv+r.sv-r.c); });
+  put(tot,Date.now(),known.reduce((s,a)=>s+pf(a),0)); if (edw) put(ed,Date.now(),pf(edw)); if (pen && pen.deposits!=null) put(pz,Date.now(),pf(pen));
+  const ke = ser(); ks.forEach((_,i)=>{ if (ed[i]!=null && me[i]!=null && pz[i]!=null) ke[i] = ed[i]+me[i]+pz[i]; });
+  mk(dcharts,"dcB",{ type:"line", data:{labels:ks.map(q=>mlab(Date.UTC(Math.floor(q/12),q%12,1))),datasets:[
+      {label:"Celkem",data:tot,borderColor:V("--ink"),backgroundColor:V("--ink"),pointRadius:4,borderWidth:2.5,spanGaps:true},
+      {label:"Zlato a stříbro (odhad)",data:me,borderColor:V("--gold"),pointRadius:0,borderWidth:1.5,spanGaps:true},
+      {label:"Edward",data:ed,borderColor:"#2a8c82",backgroundColor:"#2a8c82",pointRadius:3,borderWidth:1.5,spanGaps:true},
+      {label:"Penzijko",data:pz,borderColor:"#5b5fa8",backgroundColor:"#5b5fa8",pointRadius:3,borderWidth:1.5,spanGaps:true},
+      {label:"Kovy + Edward + penzijko (bez nového DIPu)",data:ke,borderColor:V("--up"),backgroundColor:V("--up"),pointRadius:3,borderWidth:2,borderDash:[6,3],spanGaps:true}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{grid:{color:V("--line")},border:{display:false},ticks:{callback:tick}}},
+      plugins:{legend:{position:"bottom"},tooltip:tip}}});
+  const nTot = tot.filter(v=>v!=null).length;
+  $("dcN").textContent = (nTot < 2 ? "Čára Celkem se začne kreslit s dalšími měsíčními snapshoty (Měsíční aktualizace). " : "") +
+    "Zlato a stříbro jsou dopočtené z historických cen (odhad), Edward a penzijko vycházejí z výpisů.";
+}
+
 /* --- měsíční report --- */
 function reportData(){
   const mine = ITEMS.filter(a=>!a.exclude), total = mine.reduce((s,a)=>s+a.value,0), ref = refSnap();
@@ -533,13 +575,14 @@ function mortUpdate(){
   let k = kp("Zbývá splatit",fmt(M.balance)) + kp("Splátka",fmt(M.payment)) + kp("Úrok",num(M.rate,2)+" % p.a.") +
     kp("Konec splácení",dateAt(base.months).toLocaleDateString("cs-CZ",{month:"long",year:"numeric"})) + kp("Zbývá",ym(base.months)) + kp("Úroky do konce",fmt(base.interest));
   if (M.fixedUntil) { const mo = Math.round((Date.parse(M.fixedUntil)-Date.now())/(30.44*864e5)); k += kp("Fixace do",new Date(M.fixedUntil).toLocaleDateString("cs-CZ",{month:"long",year:"numeric"})+(mo>0?" (za "+mo+" měs.)":""),mo<=9?"down":""); }
-  if (M.propertyValue) k += kp("Vlastní kapitál v nemovitosti",fmt(M.propertyValue-M.balance)) + kp("LTV",num(M.balance/M.propertyValue*100,0)+" %");
+  if (M.propertyValue) k += kp("Nemovitost",fmt(M.propertyValue)+(M.propertyArea?" ("+fmt(M.propertyValue/M.propertyArea)+" / m²)":"")) + kp("Vlastní kapitál v nemovitosti",fmt(M.propertyValue-M.balance)) + kp("LTV",num(M.balance/M.propertyValue*100,0)+" %");
   if (EX) k += kp("Investice minus hypotéka",fmt(EX.total-M.balance),cls(EX.total-M.balance)) + (M.propertyValue?kp("Čistý majetek s nemovitostí",fmt(EX.total+M.propertyValue-M.balance)):"");
   if (M.interestPaid) k += kp("Zaplaceno na úrocích dosud",fmt(M.interestPaid));
   if (ex) k += kp("Mimořádná splátka: kratší o",ym(base.months-ex.months)) + kp("Mimořádná splátka: ušetříš na úrocích",fmt(base.interest-ex.interest),"up");
   $("mortK").innerHTML = k;
   if (M.originalAmount>0) { $("mortBar").style.display = ""; $("mortBar").firstChild.style.width = Math.min(100,(1-M.balance/M.originalAmount)*100)+"%"; }
   $("mortNote").textContent = M.fixedUntil && (Date.parse(M.fixedUntil)-Date.now()) < 9*30.44*864e5 ? "Blíží se konec fixace. Zvaž včas refinancování nebo vyjednání nové sazby." : "Stav jistiny k "+(M.asOf?new Date(M.asOf).toLocaleDateString("cs-CZ"):"dnešku")+". Po fixaci se počítá zadaná sazba a splátka zůstává stejná, mění se doba splácení. Banka ji může přepočítat jinak.";
+  if (M.propertyNote) $("mortNote").textContent += " Nemovitost: "+M.propertyNote+" (odhad hodnoty).";
   const H = (M.history||[]).map(h=>({k:keyOf(new Date(h.date)),b:h.balance})), nowK = keyOf(new Date()), k0 = H.length ? H[0].k : nowK, kEnd = nowK+base.bal.length;
   const act = new Map(H.map(h=>[h.k,h.b])), lastAct = H.length ? H[H.length-1] : null, ks = [];
   for (let q = k0; q <= kEnd; q++) ks.push(q);
