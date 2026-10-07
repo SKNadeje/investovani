@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Stáhnout historické ceny
-        run: python scripts/update_history.py
+        run: python update_history.py
         continue-on-error: true
       - name: Připravit web
         run: |
