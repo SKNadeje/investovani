@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Moje investice</title>
+<meta name="theme-color" content="#10243a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%AA%99%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -48,13 +50,56 @@ footer{margin-top:28px;color:var(--mute);font-size:.85rem}
 .btn{font:inherit;padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);cursor:pointer}.btn:hover{border-color:var(--mute)}
 .delta{font-size:.82rem;font-weight:600;margin-top:2px}.spark{display:block;width:100%;height:28px;margin-top:6px}
 textarea{width:100%;font:12px/1.4 ui-monospace,monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+
+/* ===== vzhled v2 ===== */
+:root{--bg:#f5f2ea;--card:#fff;--ink:#18222e;--mute:#6b7685;--line:#e6e1d4;--up:#18794e;--down:#b4382c;--gold:#b8892b;--navy:#10243a;--r:16px;--sh:0 1px 2px rgba(16,36,58,.05),0 10px 26px -14px rgba(16,36,58,.22)}
+@media(prefers-color-scheme:dark){:root{--bg:#0c141e;--card:#142030;--ink:#eaeff5;--mute:#8d9bb0;--line:#223247;--up:#52c48d;--down:#ec7d70;--gold:#d9ad4c;--sh:0 1px 2px rgba(0,0,0,.3),0 12px 30px -14px rgba(0,0,0,.65)}}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{background:radial-gradient(1100px 480px at 88% -8%,rgba(184,137,43,.15),transparent 60%),radial-gradient(900px 480px at -8% 8%,rgba(42,140,130,.11),transparent 60%),var(--bg);background-attachment:fixed}
+main{padding-top:0}
+.hero{padding:42px 0 14px}
+.eyebrow{font-size:.76rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:8px}
+h1{font-size:clamp(2.3rem,7vw,3.7rem);line-height:1.02}
+.hero .sub{margin:10px 0 0}
+.nav{position:sticky;top:0;z-index:5;display:flex;gap:8px;overflow-x:auto;margin:0 -20px 20px;padding:10px 20px;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{white-space:nowrap;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);text-decoration:none;font-size:.85rem;font-weight:600;transition:border-color .15s,background .15s}
+.nav a:hover{border-color:var(--gold)}
+.card{border-radius:var(--r);box-shadow:var(--sh);padding:20px}
+button.card{transition:transform .18s ease,box-shadow .18s ease,border-color .18s}
+button.card:hover{transform:translateY(-2px);border-color:var(--c,var(--mute))}
+.cards>.card:not(.total){position:relative;overflow:hidden}
+.cards>.card:not(.total)::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--c,var(--line))}
+.card.total{grid-column:1/-1;background:linear-gradient(135deg,#10243a 0%,#17405a 55%,#1b6a6a 100%);color:#fff;border:0;padding:26px 28px;position:relative;overflow:hidden}
+.card.total::after{content:"";position:absolute;right:-70px;top:-70px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(232,196,106,.32),transparent 70%);pointer-events:none}
+.total .name,.total .hint{color:rgba(255,255,255,.74)}
+.total .up{color:#8ff0b8}.total .down{color:#ffb4a8}
+.total .big{font-size:clamp(2.5rem,9vw,3.5rem)}
+.big{letter-spacing:-.03em}
+section.card>h2:first-child{display:flex;align-items:center;gap:10px;font-size:1.2rem;margin-bottom:14px}
+section.card>h2:first-child::before{content:"";width:4px;height:1.1em;border-radius:3px;background:linear-gradient(var(--gold),#e8c46a)}
+.kpi{background:color-mix(in srgb,var(--bg) 55%,var(--card));border-radius:12px}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+tr.click:hover td{background:color-mix(in srgb,var(--gold) 12%,transparent)}
+.btn{border-radius:999px;padding:9px 18px;font-weight:600}
+#bRep{background:var(--navy);color:#fff;border-color:var(--navy)}
+@media(prefers-color-scheme:dark){#bRep{background:var(--gold);color:#10243a;border-color:var(--gold)}}
+dialog{border-radius:20px;box-shadow:0 30px 80px -20px rgba(0,0,0,.55)}
+dialog::backdrop{background:rgba(8,16,28,.6);backdrop-filter:blur(4px)}
+.x{border-radius:999px;padding:5px 14px}
+input,select{border-radius:10px}
+.bar{height:12px;border-radius:8px}.bar i{background:linear-gradient(90deg,var(--gold),#e8c46a)}
+footer{border-top:1px solid var(--line);padding-top:18px}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+section.card,.cards>.card{animation:rise .5s ease both}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{:root{--bg:#fff;--card:#fff;--ink:#000;--mute:#555;--line:#ccc;--up:#1e7a52;--down:#b23a2e}main,.noprint{display:none!important}dialog{position:static;border:none;width:100%;max-height:none}}
 </style>
 </head>
 <body>
 <main>
-  <h1>Moje investice</h1>
-  <p class="sub" id="updated"></p>
+  <header class="hero"><div class="eyebrow">Osobní přehled</div><h1>Moje investice</h1><p class="sub" id="updated"></p></header>
+  <nav class="nav"><a href="#prehled">Přehled</a><a href="#vyvoj">Vývoj</a><a href="#gg">Golden Gate</a><a href="#kovy">Kovy</a><a href="#vynos">Výnos</a><a href="#projekce">Projekce</a><a href="#dane">Daně</a><a href="#edgoals">Edward</a><a href="#mortgage">Hypotéka</a></nav>
   <div class="grid cards" id="cards"></div>
   <p class="hint">Klikni na kartu pro detail položky.</p>
   <div class="ctl" style="margin-top:10px"><button class="btn" id="bRep">Měsíční report</button><button class="btn" id="bUpd">Měsíční aktualizace</button></div>
@@ -64,11 +109,11 @@ textarea{width:100%;font:12px/1.4 ui-monospace,monospace;background:var(--bg);co
     <section class="card"><h2>Rozložení portfolia</h2><div class="chart"><canvas id="pieChart"></canvas></div></section>
   </div>
 
-  <section class="card" style="margin-top:16px"><h2>Přehled</h2><div class="wrap"><table id="table"></table></div></section>
+  <section class="card" id="prehled" style="margin-top:16px"><h2>Přehled</h2><div class="wrap"><table id="table"></table></div></section>
   <p class="sub" id="status" style="margin:12px 0 0"></p>
-  <section class="card" style="margin-top:16px"><h2>Vývoj celkové hodnoty</h2><div id="totWrap"><div class="chart" style="height:240px"><canvas id="totChart"></canvas></div></div></section>
+  <section class="card" id="vyvoj" style="margin-top:16px"><h2>Vývoj celkové hodnoty</h2><div id="totWrap"><div class="chart" style="height:240px"><canvas id="totChart"></canvas></div></div></section>
 
-  <section class="card" style="margin-top:16px">
+  <section class="card" id="gg" style="margin-top:16px">
     <h2>Spoření u Golden Gate</h2>
     <div id="ggGoal"></div>
     <div class="chart" style="height:240px;margin-top:12px"><canvas id="ggChart"></canvas></div>
@@ -76,7 +121,7 @@ textarea{width:100%;font:12px/1.4 ui-monospace,monospace;background:var(--bg);co
     <div class="wrap" style="margin-top:8px"><table id="ggTable"></table></div>
   </section>
 
-  <section class="card" style="margin-top:16px">
+  <section class="card" id="kovy" style="margin-top:16px">
     <h2>Hodnota kovů od roku 2020</h2>
     <div id="mhWrap">
       <div class="chart"><canvas id="mhChart"></canvas></div>
@@ -86,11 +131,11 @@ textarea{width:100%;font:12px/1.4 ui-monospace,monospace;background:var(--bg);co
       <p class="hint" id="ratioNote"></p>
     </div>
   </section>
-  <section class="card" style="margin-top:16px">
+  <section class="card" id="vynos" style="margin-top:16px">
     <h2>Roční výnos a inflace (zlato a stříbro)</h2>
     <div class="kpis" id="yieldK"></div><p class="hint" id="yieldNote"></p>
   </section>
-  <section class="card" style="margin-top:16px">
+  <section class="card" id="projekce" style="margin-top:16px">
     <h2>Projekce</h2>
     <div class="ctl">
       <label>Měsíční vklad (Kč) <input type="number" id="pm" min="0" step="500"></label>
@@ -100,7 +145,7 @@ textarea{width:100%;font:12px/1.4 ui-monospace,monospace;background:var(--bg);co
     <div class="chart" style="height:260px"><canvas id="projChart"></canvas></div>
     <p class="hint">Jen ilustrace, ne předpověď. Ceny kovů mohou růst i klesat.</p>
   </section>
-  <section class="card" style="margin-top:16px">
+  <section class="card" id="dane" style="margin-top:16px">
     <h2>Penzijko a DIP: státní příspěvek a odpočet</h2>
     <div class="ctl">
       <label>Měsíční vklad do penzijka (Kč) <input type="number" id="tm" min="0" step="100"></label>
@@ -148,7 +193,8 @@ let charts = [], dcharts = [];
 function setup(){
   Chart.defaults.font.family = '"Instrument Sans", system-ui, sans-serif';
   Chart.defaults.color = V("--mute"); Chart.defaults.borderColor = V("--line");
-  Chart.defaults.animation.duration = 350; Chart.defaults.elements.bar.borderRadius = 3;
+  Chart.defaults.animation.duration = 350; Chart.defaults.elements.bar.borderRadius = 6;
+  if (Chart.defaults.plugins && Chart.defaults.plugins.legend) { Chart.defaults.plugins.legend.labels.usePointStyle = true; Chart.defaults.plugins.legend.labels.boxWidth = 8; }
 }
 const tick = v => Math.abs(v)>=1000 ? num(v/1000,0)+" tis." : v;
 const tip = {callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.parsed.y ?? c.parsed)}`}};
@@ -276,11 +322,11 @@ function render(p){
       : dep==null ? `<div class="chg" style="color:var(--mute)">vklady neznámé</div>`
       : `<div class="chg ${cls(d)}">${sg(d)} (${pct(d/dep*100)})</div>`;
     const inner = `<div class="name"><span class="dot" style="background:${it.color}"></span>${it.name}${it.exclude?" (mimo celkem)":""}</div><div class="big">${fmt(it.value)}</div>${sub}${trend(it.id||"total",it.value,it.color||V("--ink"))}`;
-    return total ? `<button class="card total" data-total="1">${inner}</button>` : `<button class="card" data-id="${it.id}">${inner}</button>`;
+    return total ? `<button class="card total" data-total="1">${inner}</button>` : `<button class="card" data-id="${it.id}" style="--c:${it.color}">${inner}</button>`;
   };
   const Mg = DATA.mortgage || {};
-  const mcard = Mg.balance>0 ? `<button class="card" data-scroll="mortgage"><div class="name"><span class="dot" style="background:#b23a2e"></span>Hypotéka</div><div class="big">${fmt(Mg.balance)}</div><div class="chg" style="color:var(--mute)">${Mg.payment?fmt(Mg.payment)+" měsíčně":"zbývá splatit"}${Mg.rate!=null?", úrok "+num(Mg.rate,2)+" %":""}</div></button>` : "";
-  $("cards").innerHTML = card({name:"Celkem",color:V("--ink"),value:totalVal},true) + ITEMS.map(a=>card(a)).join("") + mcard;
+  const mcard = Mg.balance>0 ? `<button class="card" data-scroll="mortgage" style="--c:#b23a2e"><div class="name"><span class="dot" style="background:#b23a2e"></span>Hypotéka</div><div class="big">${fmt(Mg.balance)}</div><div class="chg" style="color:var(--mute)">${Mg.payment?fmt(Mg.payment)+" měsíčně":"zbývá splatit"}${Mg.rate!=null?", úrok "+num(Mg.rate,2)+" %":""}</div></button>` : "";
+  $("cards").innerHTML = card({name:"Celkem",color:"#e8c46a",value:totalVal},true) + ITEMS.map(a=>card(a)).join("") + mcard;
   $("cards").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.total ? showTotal() : b.dataset.scroll ? $(b.dataset.scroll).scrollIntoView({behavior:"smooth"}) : showItem(b.dataset.id));
 
   $("table").innerHTML = `<tr><th>Položka</th><th>Vloženo</th><th>Hodnota</th><th>Zisk</th><th>Výnos</th><th>Podíl</th></tr>` +
