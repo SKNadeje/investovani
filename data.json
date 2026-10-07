@@ -298,7 +298,7 @@
     ],
     "notes": [
      "Do převodu z Generali (148 828 Kč) se počítají i dřívější výnosy 41 808 Kč. Evidence ČS i aplikace je berou jako vklad, proto je zisk na kartě nižší než skutečný zisk uvedený výše.",
-     "Zaměstnavatel přispíval 800 Kč měsíčně do února 2025, od března 2025 1 100 Kč. Státní příspěvek je 200 Kč měsíčně (vyplácí se čtvrtletně po 600 Kč).",
+     "Zaměstnavatel přispíval do penzijka 800 Kč měsíčně do února 2025, od března 2025 1 100 Kč. Dnes posíláš do penzijka jen ty 1 000 Kč, příspěvek zaměstnavatele (1 100 Kč) jde do DIPu. Státní příspěvek je 200 Kč měsíčně (vyplácí se čtvrtletně po 600 Kč).",
      "Další roční výpis přidej jako řádek do první tabulky v data.json."
     ]
    }
