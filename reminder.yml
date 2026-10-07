@@ -1,0 +1,19 @@
+name: Měsíční připomínka
+on:
+  schedule:
+    - cron: "0 6 8 * *"
+  workflow_dispatch:
+permissions:
+  issues: write
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vytvořit připomínku
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --assignee "${{ github.repository_owner }}" \
+            --title "Měsíční aktualizace investic" \
+            --body "Otevři web, klikni na Měsíční aktualizace, vyplň čísla z Edwardu, penzijka, DIPu, Golden Gate a hypotéky, zkopíruj data.json a nahraj ho do repozitáře."
