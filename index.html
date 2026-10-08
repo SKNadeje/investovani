@@ -93,13 +93,17 @@ footer{border-top:1px solid var(--line);padding-top:18px}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 section.card,.cards>.card{animation:rise .5s ease both}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.seg button{font:inherit;font-size:.85rem;font-weight:600;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.seg button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+@media(prefers-color-scheme:dark){.seg button.on{background:var(--gold);color:#10243a;border-color:var(--gold)}}
 @media print{:root{--bg:#fff;--card:#fff;--ink:#000;--mute:#555;--line:#ccc;--up:#1e7a52;--down:#b23a2e}main,.noprint{display:none!important}dialog{position:static;border:none;width:100%;max-height:none}}
 </style>
 </head>
 <body>
 <main>
   <header class="hero"><div class="eyebrow">Osobní přehled</div><h1>Moje investice</h1><p class="sub" id="updated"></p></header>
-  <nav class="nav"><a href="#prehled">Přehled</a><a href="#vyvoj">Vývoj</a><a href="#gg">Golden Gate</a><a href="#kovy">Kovy</a><a href="#vynos">Výnos</a><a href="#projekce">Projekce</a><a href="#dane">Daně</a><a href="#edgoals">Edward</a><a href="#mortgage">Hypotéka</a></nav>
+  <nav class="nav"><a href="#prehled">Přehled</a><a href="#vyvoj">Vývoj</a><a href="#trhy">Trhy</a><a href="#gg">Golden Gate</a><a href="#kovy">Kovy</a><a href="#vynos">Výnos</a><a href="#projekce">Projekce</a><a href="#dane">Daně</a><a href="#edgoals">Edward</a><a href="#mortgage">Hypotéka</a></nav>
   <div class="grid cards" id="cards"></div>
   <p class="hint">Klikni na kartu pro detail položky.</p>
   <div class="ctl" style="margin-top:10px"><button class="btn" id="bRep">Měsíční report</button><button class="btn" id="bUpd">Měsíční aktualizace</button></div>
@@ -112,6 +116,14 @@ section.card,.cards>.card{animation:rise .5s ease both}
   <section class="card" id="prehled" style="margin-top:16px"><h2>Přehled</h2><div class="wrap"><table id="table"></table></div></section>
   <p class="sub" id="status" style="margin:12px 0 0"></p>
   <section class="card" id="vyvoj" style="margin-top:16px"><h2>Vývoj celkové hodnoty</h2><div id="totWrap"><div class="chart" style="height:240px"><canvas id="totChart"></canvas></div></div></section>
+
+  <section class="card" id="trhy" style="margin-top:16px">
+    <h2>Trhy: zlato, stříbro a kurz</h2>
+    <div class="seg" id="mktInst"></div><div class="seg" id="mktRange"></div>
+    <div class="kpis" id="mktK"></div>
+    <div class="chart" style="height:300px"><canvas id="mktChart"></canvas></div>
+    <p class="hint" id="mktNote"></p>
+  </section>
 
   <section class="card" id="gg" style="margin-top:16px">
     <h2>Spoření u Golden Gate</h2>
@@ -165,7 +177,8 @@ section.card,.cards>.card{animation:rise .5s ease both}
 <dialog id="dlg"><button class="x" id="dx">Zavřít</button><div id="dbody"></div></dialog>
 
 <script>
-let DATA, HIST = null, EX = null, projChart = null;
+let DATA, HIST = null, EX = null, projChart = null, mktChart = null, LIVE = [];
+const MKT = { inst:"gold", range:"live" };
 const OZ = 31.1035; // gramů v trojské unci
 
 const fmt = n => new Intl.NumberFormat("cs-CZ",{style:"currency",currency:"CZK",maximumFractionDigits:0}).format(n);
@@ -384,7 +397,7 @@ function extras(){
   EX = { costNow: gold.deposits+silv.deposits, valNow: gold.value+silv.value, total: ITEMS.filter(a=>!a.exclude).reduce((t,a)=>t+a.value,0) };
   if (HIST && HIST.daily && HIST.daily.length) metalsHistory(gold,silv);
   else $("mhWrap").innerHTML = `<p class="hint">Historické ceny zatím nejsou. V GitHubu spusť Actions → Deploy Pages → Run workflow, soubor <code>history.json</code> se vytvoří sám a každý den se obnoví.</p>`;
-  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); edwardGoals(); mortUpdate();
+  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); edwardGoals(); mortUpdate(); mktRender();
 }
 
 function metalsHistory(gold,silv){
@@ -641,17 +654,92 @@ function mortUpdate(){
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{grid:{color:V("--line")},border:{display:false},ticks:{callback:tick}}},plugins:{legend:{position:"bottom"},tooltip:tip}}});
 }
 
+/* ============ Trhy: živé grafy ============ */
+const LKEY = "inv_live_v1";
+function liveLoad(){ try { LIVE = JSON.parse(localStorage.getItem(LKEY)||"[]").filter(p=>Date.now()-p[0] < 36*36e5); } catch(e){ LIVE = []; } }
+function liveSave(){ try { localStorage.setItem(LKEY,JSON.stringify(LIVE.slice(-2000))); } catch(e){} }
+async function pollSpot(){
+  let x = 0, g = 0;
+  try { const j = await getJSON("https://xaus.com/api/v1/spot"); x = +(j.xau && j.xau.price); g = +j.silver_usd_oz; } catch(e){}
+  if (!(x>0)) { try { x = +(await getJSON("https://api.gold-api.com/price/XAU")).price; } catch(e){} }
+  if (!(g>0)) { try { g = +(await getJSON("https://api.gold-api.com/price/XAG")).price; } catch(e){} }
+  const fx = (P && P.fx) || (HIST && HIST.daily && HIST.daily.length ? HIST.daily[HIST.daily.length-1][3] : 0);
+  if (!(x>0 && g>0 && fx)) return false;
+  const last = LIVE[LIVE.length-1]; if (last && Date.now()-last[0] < 20e3) return true;
+  LIVE.push([Date.now(),x,g,fx]); liveSave(); return true;
+}
+async function liveTick(){ if (document.visibilityState === "visible" && await pollSpot() && MKT.range === "live") mktRender(); }
+function liveStart(){ liveTick(); setInterval(liveTick,60000); document.addEventListener("visibilitychange",liveTick); }
+
+function mktInit(){
+  const I = [["gold","Zlato"],["silver","Stříbro"],["ratio","Au/Ag"],["fx","USD/CZK"],["mine","Moje kovy"]], R = [["live","Den"],["week","Týden"],["month","Měsíc"],["year","Rok"],["all","Vše"]];
+  const mk2 = (id,arr,key) => { $(id).innerHTML = arr.map(([k,l])=>`<button data-k="${k}">${l}</button>`).join("");
+    $(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{ MKT[key] = b.dataset.k; mktRender(); }); };
+  mk2("mktInst",I,"inst"); mk2("mktRange",R,"range");
+}
+function mktPoints(){
+  const now = Date.now(), R = MKT.range;
+  const daily = HIST && HIST.daily ? HIST.daily.map(r=>[Date.parse(r[0]+"T12:00:00Z"),r[1],r[2],r[3]]) : [];
+  const intra = HIST && HIST.intraday ? HIST.intraday : [];
+  const lastI = intra.length ? intra[intra.length-1][0] : 0, liveAfter = from => LIVE.filter(r=>r[0] >= from && r[0] > lastI);
+  let rows;
+  if (R === "live") { const from = now-24*36e5; rows = intra.filter(r=>r[0] >= from).concat(liveAfter(from)); }
+  else if (R === "week") { const from = now-7*864e5, iv = intra.filter(r=>r[0] >= from);
+    rows = iv.length > 100 ? iv.concat(liveAfter(from)) : daily.filter(r=>r[0] >= from-864e5).concat(LIVE.slice(-1)); }
+  else if (R === "month") rows = daily.filter(r=>r[0] >= now-31*864e5).concat(LIVE.slice(-1));
+  else if (R === "year") rows = daily.filter(r=>r[0] >= now-366*864e5).concat(LIVE.slice(-1));
+  else rows = daily.concat(LIVE.slice(-1));
+  if (rows.length > 700) { const k = Math.ceil(rows.length/700); rows = rows.filter((_,i)=>i%k === 0 || i === rows.length-1); }
+  return rows;
+}
+function mktRender(){
+  if (!DATA || !$("mktChart")) return;
+  document.querySelectorAll("#mktInst button").forEach(b=>b.classList.toggle("on",b.dataset.k === MKT.inst));
+  document.querySelectorAll("#mktRange button").forEach(b=>b.classList.toggle("on",b.dataset.k === MKT.range));
+  const m0 = DATA.metals[0], m1 = DATA.metals[1], k0 = 1+(m0.premium||0)/100, k1 = 1+(m1.premium||0)/100;
+  const S = {
+    gold:{ f:r=>r[1]*r[3]*k0, fmt:fmt, sg:sg, gram:true, c:"#c9a227" },
+    silver:{ f:r=>r[2]*r[3]*k1, fmt:fmt, sg:sg, gram:true, c:"#8a97a6" },
+    ratio:{ f:r=>r[1]/r[2], fmt:v=>num(v,1), sg:v=>(v>=0?"+":"")+num(v,1) },
+    fx:{ f:r=>r[3], fmt:v=>num(v,2)+" Kč", sg:v=>(v>=0?"+":"")+num(v,2)+" Kč" },
+    mine:{ f:r=>(m0.grams/OZ*r[1]*k0 + m1.grams/OZ*r[2]*k1)*r[3], fmt:fmt, sg:sg }
+  }[MKT.inst];
+  const rows = mktPoints(), pts = rows.map(r=>({t:r[0],v:S.f(r)}));
+  if (mktChart) { mktChart.destroy(); mktChart = null; }
+  if (pts.length < 2) {
+    $("mktK").innerHTML = "";
+    $("mktNote").textContent = MKT.range === "live"
+      ? "Živý graf se plní, dokud máš stránku otevřenou (nový bod každou minutu). Historie dne se doplní z automatického stahování (history.json)."
+      : "Pro tento rozsah chybí historická data. V GitHubu spusť Actions → Deploy Pages → Run workflow, vznikne history.json.";
+    return;
+  }
+  const first = pts[0].v, last = pts[pts.length-1].v, ch = last-first, up = ch >= 0;
+  const vs = pts.map(p=>p.v), mx = Math.max(...vs), mn = Math.min(...vs);
+  $("mktK").innerHTML = kp("Aktuálně",S.fmt(last)) + kp("Změna za období",S.sg(ch)+(S.fmt===fmt||MKT.inst==="ratio"||MKT.inst==="fx"?" ("+pct(ch/first*100)+")":""),cls(ch)) +
+    kp("Maximum",S.fmt(mx)) + kp("Minimum",S.fmt(mn)) + (S.gram ? kp("Za gram",fmt(last/OZ)) : "");
+  const col = up ? V("--up") : V("--down"), R = MKT.range;
+  const lab = t => { const d = new Date(t); return R === "live" ? d.toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})
+    : R === "week" ? d.toLocaleString("cs-CZ",{weekday:"short",hour:"2-digit"}) : R === "month" ? d.toLocaleDateString("cs-CZ",{day:"numeric",month:"numeric"})
+    : d.toLocaleDateString("cs-CZ",{month:"numeric",year:"2-digit"}); };
+  mktChart = new Chart($("mktChart"),{ type:"line", data:{labels:pts.map(p=>lab(p.t)),datasets:[{data:vs,borderColor:col,backgroundColor:col+"22",fill:true,tension:.15,pointRadius:0,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8}},y:{grid:{color:V("--line")},border:{display:false},ticks:{callback:v=>MKT.inst==="ratio"?num(v,1):MKT.inst==="fx"?num(v,2):num(v,0)}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>new Date(pts[i[0].dataIndex].t).toLocaleString("cs-CZ"),label:c=>S.fmt(c.parsed.y)}}}}});
+  const names = { gold:"Zlato v Kč za unci", silver:"Stříbro v Kč za unci", ratio:"Poměr cen zlata a stříbra", fx:"Kurz USD/CZK", mine:"Dnešní množství tvých kovů, přepočtené historickými cenami" };
+  $("mktNote").textContent = names[MKT.inst] + ". Spotové ceny (ne výkupní)." + (R === "live" ? " Den = posledních 24 hodin, nový bod každou minutu, dokud je stránka otevřená." : "");
+}
+
 async function init(){
   try { DATA = await getJSON("data.json",{cache:"no-store"}); }
-  catch(e){ document.body.innerHTML = "<main><h1>Nelze načíst data.json</h1><p class='sub'>Na GitHub Pages musí být vedle index.html i soubor data.json. Lokálně spusť <code>python -m http.server</code> a otevři localhost.</p></main>"; return; }
+  catch(e){ const why = e && e.message ? "Soubor je poškozený (neplatný JSON): "+e.message : "Soubor data.json se nenašel nebo se nepodařilo stáhnout."; document.body.innerHTML = "<main><h1>Nelze načíst data.json</h1><p class='sub'>"+why+" Na GitHub Pages musí být data.json vedle index.html. Lokálně spusť <code>python -m http.server</code> a otevři localhost.</p></main>"; return; }
   try { HIST = await getJSON("history.json",{cache:"no-store"}); } catch(e){}
   $("bRep").onclick = () => openDlg(reportHTML(),bindReport);
   $("bUpd").onclick = () => openDlg(updForm(),()=>{ $("uGen").onclick = updGen; });
   $("pm").value = DATA.gg.monthly; $("tm").value = DATA.tax.dpsMonthly; $("td").value = DATA.tax.dipMonthly; $("te").value = DATA.tax.dipEmployerMonthly||0;
   ["pm","pg"].forEach(id=>$(id).addEventListener("input",projUpdate));
   ["tm","td","te","tr"].forEach(id=>$(id).addEventListener("input",taxUpdate));
-  setup(); render(null);
-  loadPrices().then(render).catch(()=>{});
+  mktInit(); liveLoad(); setup(); render(null);
+  loadPrices().then(render).then(liveStart).catch(()=>liveStart());
 }
 init();
 </script>
