@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-04",
+ "updated": "2026-10-07",
  "metals": [
   {
    "id": "gold",
@@ -153,7 +153,7 @@
      "profit": 47721.83
     }
    ],
-   "asOf": "2026-09-29",
+   "asOf": "2026-10-07",
    "carriedGain": 41808.4,
    "extra": {
     "kpis": [
@@ -683,6 +683,37 @@
     }
    },
    "mortgage": null
+  },
+  {
+   "date": "2026-10-07",
+   "total": 958123,
+   "items": {
+    "gold": {
+     "value": 302888.91,
+     "deposits": 196567.42
+    },
+    "silver": {
+     "value": 47269.22,
+     "deposits": 33599.9
+    },
+    "edward": {
+     "value": 343641.75,
+     "deposits": 302660
+    },
+    "penze": {
+     "value": 260628.13,
+     "deposits": 204125.99
+    },
+    "dip": {
+     "value": 3694.71,
+     "deposits": 3706
+    },
+    "syn": {
+     "value": 79363.56,
+     "deposits": 50420
+    }
+   },
+   "mortgage": 3081158.91
   }
  ],
  "mortgage": {
