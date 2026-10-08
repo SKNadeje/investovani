@@ -15,6 +15,11 @@ def yahoo(sym):
     return {dt.datetime.utcfromtimestamp(t).strftime("%Y-%m-%d"): c
             for t, c in zip(r["timestamp"], r["indicators"]["quote"][0]["close"]) if c}
 
+def yahoo_intraday(sym):
+    url = "https://query1.finance.yahoo.com/v8/finance/chart/%s?range=5d&interval=15m" % urllib.parse.quote(sym)
+    r = json.loads(get(url))["chart"]["result"][0]
+    return {int(t)*1000: c for t, c in zip(r["timestamp"], r["indicators"]["quote"][0]["close"]) if c}
+
 def stooq(sym):
     rows = csv.DictReader(io.StringIO(get("https://stooq.com/q/d/l/?s=%s&i=d" % sym)))
     return {r["Date"]: float(r["Close"]) for r in rows if r["Date"] >= START and r.get("Close")}
@@ -52,7 +57,21 @@ for d in sorted(set(xau) | set(xag) | set(fx)):
     if None not in last:
         rows.append([d, round(last[0], 2), round(last[1], 3), round(last[2], 4)])
 
-out = {"updated": dt.datetime.utcnow().isoformat() + "Z", "daily": rows, "inflation": inflation()}
+intra = []
+try:
+    gi, si = yahoo_intraday("XAUUSD=X"), yahoo_intraday("XAGUSD=X")
+    fxd, fxlast = {r[0]: r[3] for r in rows}, rows[-1][3]
+    lx = ls = None
+    for t in sorted(set(gi) | set(si)):
+        lx, ls = gi.get(t, lx), si.get(t, ls)
+        if lx and ls:
+            day = dt.datetime.utcfromtimestamp(t/1000).strftime("%Y-%m-%d")
+            intra.append([t, round(lx, 2), round(ls, 3), fxd.get(day, fxlast)])
+    print("intraday:", len(intra), "bodů")
+except Exception as e:
+    print("intraday selhal:", e)
+
+out = {"updated": dt.datetime.utcnow().isoformat() + "Z", "daily": rows, "intraday": intra, "inflation": inflation()}
 with open("history.json", "w") as f:
     json.dump(out, f, separators=(",", ":"))
 print("history.json:", len(rows), "dnů")
