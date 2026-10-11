@@ -6,7 +6,7 @@ on:
     - cron: "15 */3 * * *"
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 concurrency:
@@ -26,11 +26,22 @@ jobs:
       - name: Stáhnout historické ceny
         run: python update_history.py
         continue-on-error: true
+      - name: Souhrn stažení
+        if: always()
+        run: cat status.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Uložit history.json do repozitáře
+        run: |
+          if [ -f history.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add history.json
+            git diff --cached --quiet || (git commit -m "Aktualizace history.json" && git push)
+          fi
       - name: Připravit web
         run: |
           mkdir _site
           cp index.html data.json _site/
-          cp history.json _site/ || true
+          cp history.json intraday.json _site/ 2>/dev/null || true
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
