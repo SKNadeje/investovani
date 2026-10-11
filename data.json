@@ -624,7 +624,7 @@
   ],
   "monthly": 3000
  },
- "_napoveda": "Tvoje data. Měsíčně použij na webu tlačítko Měsíční aktualizace, vygeneruje nový data.json. mortgage: balance = zbývá splatit (Kč), rate = úrok % p.a., payment = měsíční splátka, fixedUntil = 'YYYY-MM-DD', propertyValue = hodnota nemovitosti, originalAmount = původní výše úvěru. metals[].premium = přirážka (%) k spotové ceně pro ocenění, např. aby cena sedla na prodejní cenu Golden Gate.",
+ "_napoveda": "Tvoje data. Měsíčně použij na webu tlačítko Úpravy dat, vygeneruje nový data.json. mortgage: balance = zbývá splatit (Kč), rate = úrok % p.a., payment = měsíční splátka, fixedUntil = 'YYYY-MM-DD', propertyValue = hodnota nemovitosti, originalAmount = původní výše úvěru. metals[].premium = přirážka (%) k spotové ceně pro ocenění, např. aby cena sedla na prodejní cenu Golden Gate.",
  "tax": {
   "dpsMonthly": 1000,
   "dipMonthly": 200,
@@ -822,92 +822,5 @@
   ],
   "propertyArea": 82,
   "propertyNote": "byt po kompletní rekonstrukci, 82 m², Trutnov – Krýblice"
- },
- "edward": {
-  "reports": [
-   "2024-12",
-   "2025-12",
-   "2026-09"
-  ],
-  "plan": {
-   "monthlyDeposit": 5000,
-   "reserve": 100000,
-   "bonusYearly": 50000,
-   "pensionStart": "2058-09",
-   "pensionRent": 12000,
-   "pensionNeeded": 14560,
-   "projectedAtStart": 9479700
-  },
-  "goals": [
-   {
-    "name": "Vánoce",
-    "amount": 31210,
-    "when": "ročně 9/2026 – 9/2044",
-    "prob": {
-     "2024-12": 96,
-     "2025-12": 54,
-     "2026-09": 42
-    }
-   },
-   {
-    "name": "Zimní dovolená",
-    "amount": 20810,
-    "when": "každé 2 roky 12/2026 – 12/2040",
-    "prob": {
-     "2024-12": 100,
-     "2025-12": 72,
-     "2026-09": 59
-    }
-   },
-   {
-    "name": "Pojištění auta",
-    "amount": 7000,
-    "when": "ročně 7/2027 – 7/2053",
-    "prob": {
-     "2024-12": 99,
-     "2025-12": 60,
-     "2026-09": 84
-    }
-   },
-   {
-    "name": "Letní dovolená",
-    "amount": 67630,
-    "when": "ročně 7/2027 – 7/2053",
-    "prob": {
-     "2024-12": 100,
-     "2025-12": 92,
-     "2026-09": 84
-    }
-   },
-   {
-    "name": "Nové auto",
-    "amount": 312120,
-    "when": "jednorázově 7/2030",
-    "prob": {
-     "2024-12": 100,
-     "2025-12": 72,
-     "2026-09": 79
-    }
-   },
-   {
-    "name": "Renta na VŠ (Matěj)",
-    "amount": 10400,
-    "when": "měsíčně 5/2038 – 5/2043",
-    "prob": {
-     "2024-12": 100,
-     "2025-12": 59,
-     "2026-09": 44
-    }
-   },
-   {
-    "name": "Náš dům snů (v plánu jen 2024)",
-    "amount": 1020000,
-    "when": "jednorázově 7/2031",
-    "prob": {
-     "2024-12": 17
-    }
-   }
-  ],
-  "note": "Pravděpodobnosti jsou odhady Edwardu z jeho reportů. Plán se mezi reporty měnil (v 2024 vklad 10 000 Kč měsíčně a plánované jednorázové příjmy, v 2026 do plánu přibyly Golden Gate, penzijko, DIP a hypotéka), takže sloupce nejsou přímo srovnatelné."
  }
 }
