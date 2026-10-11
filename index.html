@@ -97,26 +97,38 @@ section.card,.cards>.card{animation:rise .5s ease both}
 .seg button{font:inherit;font-size:.85rem;font-weight:600;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 .seg button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 @media(prefers-color-scheme:dark){.seg button.on{background:var(--gold);color:#10243a;border-color:var(--gold)}}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.status{margin:10px 0 0;color:var(--mute);font-size:.84rem;max-width:70ch}
+.nav button{font:inherit;white-space:nowrap;padding:6px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.88rem;font-weight:600;cursor:pointer;transition:border-color .15s}
+.nav button:hover{border-color:var(--gold)}
+.nav button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+@media(prefers-color-scheme:dark){.nav button.on{background:var(--gold);color:#10243a;border-color:var(--gold)}}
+.tab{display:none}.tab.on{display:block}
 @media print{:root{--bg:#fff;--card:#fff;--ink:#000;--mute:#555;--line:#ccc;--up:#1e7a52;--down:#b23a2e}main,.noprint{display:none!important}dialog{position:static;border:none;width:100%;max-height:none}}
 </style>
 </head>
 <body>
 <main>
-  <header class="hero"><div class="eyebrow">Osobní přehled</div><h1>Moje investice</h1><p class="sub" id="updated"></p></header>
-  <nav class="nav"><a href="#prehled">Přehled</a><a href="#vyvoj">Vývoj</a><a href="#trhy">Trhy</a><a href="#gg">Golden Gate</a><a href="#kovy">Kovy</a><a href="#vynos">Výnos</a><a href="#projekce">Projekce</a><a href="#dane">Daně</a><a href="#edgoals">Edward</a><a href="#mortgage">Hypotéka</a></nav>
+  <header class="hero">
+    <div class="hero-top">
+      <div><div class="eyebrow">Osobní přehled</div><h1>Moje investice</h1><p class="sub" id="updated"></p><p class="status" id="status"></p></div>
+      <div class="acts"><button class="btn" id="bRep">Měsíční report</button><button class="btn" id="bUpd">🔒 Úpravy dat</button></div>
+    </div>
+  </header>
+  <nav class="nav" id="tabs"><button data-tab="prehled" class="on">Přehled</button><button data-tab="trhy">Trhy</button><button data-tab="kovy">Kovy</button><button data-tab="plany">Plány</button><button data-tab="hypoteka">Hypotéka</button></nav>
+
+  <div class="tab on" id="tab-prehled">
   <div class="grid cards" id="cards"></div>
   <p class="hint">Klikni na kartu pro detail položky.</p>
-  <div class="ctl" style="margin-top:10px"><button class="btn" id="bRep">Měsíční report</button><button class="btn" id="bUpd">Měsíční aktualizace</button></div>
-
   <div class="grid two">
     <section class="card"><h2>Vloženo vs. dnešní hodnota</h2><div class="chart"><canvas id="barChart"></canvas></div></section>
     <section class="card"><h2>Rozložení portfolia</h2><div class="chart"><canvas id="pieChart"></canvas></div></section>
   </div>
-
   <section class="card" id="prehled" style="margin-top:16px"><h2>Přehled</h2><div class="wrap"><table id="table"></table></div></section>
-  <p class="sub" id="status" style="margin:12px 0 0"></p>
   <section class="card" id="vyvoj" style="margin-top:16px"><h2>Vývoj celkové hodnoty</h2><div id="totWrap"><div class="chart" style="height:240px"><canvas id="totChart"></canvas></div></div></section>
-
+  </div>
+  <div class="tab" id="tab-trhy">
   <section class="card" id="trhy" style="margin-top:16px">
     <h2>Trhy: zlato, stříbro a kurz</h2>
     <div class="seg" id="mktInst"></div><div class="seg" id="mktRange"></div>
@@ -124,7 +136,8 @@ section.card,.cards>.card{animation:rise .5s ease both}
     <div class="chart" style="height:300px"><canvas id="mktChart"></canvas></div>
     <p class="hint" id="mktNote"></p>
   </section>
-
+  </div>
+  <div class="tab" id="tab-kovy">
   <section class="card" id="gg" style="margin-top:16px">
     <h2>Spoření u Golden Gate</h2>
     <div id="ggGoal"></div>
@@ -132,7 +145,6 @@ section.card,.cards>.card{animation:rise .5s ease both}
     <p class="hint">Klikni na sloupec nebo řádek roku pro detail plateb.</p>
     <div class="wrap" style="margin-top:8px"><table id="ggTable"></table></div>
   </section>
-
   <section class="card" id="kovy" style="margin-top:16px">
     <h2>Hodnota kovů od roku 2020</h2>
     <div id="mhWrap">
@@ -143,6 +155,8 @@ section.card,.cards>.card{animation:rise .5s ease both}
       <p class="hint" id="ratioNote"></p>
     </div>
   </section>
+  </div>
+  <div class="tab" id="tab-plany">
   <section class="card" id="vynos" style="margin-top:16px">
     <h2>Roční výnos a inflace (zlato a stříbro)</h2>
     <div class="kpis" id="yieldK"></div><p class="hint" id="yieldNote"></p>
@@ -167,11 +181,10 @@ section.card,.cards>.card{animation:rise .5s ease both}
     </div>
     <div class="kpis" id="taxK"></div><p class="hint" id="taxNote"></p>
   </section>
-
-  <section class="card" style="margin-top:16px" id="edgoals"><h2>Edward: plán a cíle</h2><div class="kpis" id="edK"></div><div class="wrap"><table id="edT"></table></div><p class="hint" id="edN"></p></section>
-
+  </div>
+  <div class="tab" id="tab-hypoteka">
   <section class="card" style="margin-top:16px" id="mortgage"><h2>Hypotéka</h2><div id="mortWrap"></div></section>
-
+  </div>
   <footer>Zlato a stříbro se oceňuje podle spotové ceny (výkup u obchodníka bývá nižší). Řádek 2026* je odhad z průměrných cen. Data uprav v souboru <code>data.json</code>.</footer>
 </main>
 <dialog id="dlg"><button class="x" id="dx">Zavřít</button><div id="dbody"></div></dialog>
@@ -267,7 +280,7 @@ function detail(it){
   h += `<h2 style="margin-top:18px">${it.kind==="metal"?"Vývoj množství a nákupní ceny":"Vývoj hodnoty"}</h2>`;
   const hist = it.hist||[];
   if (it.kind==="metal" || hist.length>=2) h += `<div class="chart" style="height:260px"><canvas id="dc"></canvas></div>`;
-  else h += `<p class="hint">Historie zatím není. Každý měsíc použij tlačítko Měsíční aktualizace, od druhého záznamu se tu objeví graf.</p>`;
+  else h += `<p class="hint">Historie zatím není. Každý měsíc použij tlačítko Úpravy dat, od druhého záznamu se tu objeví graf.</p>`;
   return h;
 }
 function detailChart(it){
@@ -340,7 +353,7 @@ function render(p){
   const Mg = DATA.mortgage || {};
   const mcard = Mg.balance>0 ? `<button class="card" data-scroll="mortgage" style="--c:#b23a2e"><div class="name"><span class="dot" style="background:#b23a2e"></span>Hypotéka</div><div class="big">${fmt(Mg.balance)}</div><div class="chg" style="color:var(--mute)">${Mg.payment?fmt(Mg.payment)+" měsíčně":"zbývá splatit"}${Mg.rate!=null?", úrok "+num(Mg.rate,2)+" %":""}</div></button>` : "";
   $("cards").innerHTML = card({name:"Celkem",color:"#e8c46a",value:totalVal},true) + ITEMS.map(a=>card(a)).join("") + mcard;
-  $("cards").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.total ? showTotal() : b.dataset.scroll ? $(b.dataset.scroll).scrollIntoView({behavior:"smooth"}) : showItem(b.dataset.id));
+  $("cards").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.total ? showTotal() : b.dataset.scroll ? showTab("hypoteka") : showItem(b.dataset.id));
 
   $("table").innerHTML = `<tr><th>Položka</th><th>Vloženo</th><th>Hodnota</th><th>Zisk</th><th>Výnos</th><th>Podíl</th></tr>` +
     ITEMS.map(a=>{ const d=a.deposits, pr=d==null?null:a.value-d, c=pr==null?"":cls(pr);
@@ -396,8 +409,8 @@ function extras(){
   const gold = ITEMS.find(x=>x.id==="gold"), silv = ITEMS.find(x=>x.id==="silver");
   EX = { costNow: gold.deposits+silv.deposits, valNow: gold.value+silv.value, total: ITEMS.filter(a=>!a.exclude).reduce((t,a)=>t+a.value,0) };
   if (HIST && HIST.daily && HIST.daily.length) metalsHistory(gold,silv);
-  else $("mhWrap").innerHTML = `<p class="hint">Historické ceny zatím nejsou. V GitHubu spusť Actions → Deploy Pages → Run workflow, soubor <code>history.json</code> se vytvoří sám a každý den se obnoví.</p>`;
-  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); edwardGoals(); mortUpdate(); mktRender();
+  else $("mhWrap").innerHTML = `<p class="hint">Historické ceny zatím nejsou. V GitHubu otevři Actions → Deploy Pages → Run workflow. Po doběhnutí uvidíš v souhrnu běhu, který zdroj cen funguje. Soubor <code>history.json</code> se pak objeví i v repozitáři.</p>`;
+  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); mortUpdate(); mktRender();
 }
 
 function metalsHistory(gold,silv){
@@ -491,19 +504,9 @@ function trend(id,val,color){
   let h = ""; if (rv!=null) { const dd = val-rv; h += `<div class="delta ${cls(dd)}">${sg(dd)} od ${new Date(ref.date).toLocaleDateString("cs-CZ",{day:"numeric",month:"numeric"})}</div>`; }
   return h + (vals.length>=2 ? spark(vals,color) : ""); }
 
-function edwardGoals(){
-  const E = DATA.edward; if (!E) { $("edgoals").style.display = "none"; return; }
-  const p = E.plan, rs = E.reports, pc = v => v>=80 ? "up" : v>=60 ? "" : "down";
-  $("edK").innerHTML = kp("Pravidelný vklad",fmt(p.monthlyDeposit)+" měsíčně") + kp("Pohotovostní rezerva",fmt(p.reserve)) + kp("Cílové odměny",fmt(p.bonusYearly)+" ročně") +
-    kp("Renta od "+p.pensionStart.split("-").reverse().join("/"),fmt(p.pensionRent)+" z potřebných "+fmt(p.pensionNeeded)+" ("+num(p.pensionRent/p.pensionNeeded*100,0)+" %)",p.pensionRent<p.pensionNeeded?"down":"up") +
-    kp("Očekávaný majetek při začátku renty",fmt(p.projectedAtStart));
-  $("edT").innerHTML = `<tr><th>Cíl</th><th>Částka</th><th>Kdy</th>${rs.map(r=>`<th>${r.slice(5)}/${r.slice(0,4)}</th>`).join("")}</tr>` +
-    E.goals.map(g=>`<tr><td>${g.name}</td><td>${fmt(g.amount)}</td><td>${g.when}</td>${rs.map(r=>{ const v = g.prob[r]; return `<td class="${v==null?"":pc(v)}">${v==null?"—":v+" %"}</td>`; }).join("")}</tr>`).join("");
-  $("edN").textContent = "Pravděpodobnost splnění cíle podle Edwardu. " + E.note;
-}
 function totalChart(){
   const S = (DATA.snapshots||[]).filter(x=>x.total!=null), wrap = $("totWrap");
-  if (!S.length) { wrap.innerHTML = `<p class="hint" style="margin:0">Graf se objeví po prvním uložení snapshotu: klikni na Měsíční aktualizace, vyplň čísla a nahraj vygenerovaný data.json. Od druhého záznamu uvidíš vývoj.</p>`; return; }
+  if (!S.length) { wrap.innerHTML = `<p class="hint" style="margin:0">Graf se objeví po prvním uložení snapshotu: klikni na Úpravy dat, vyplň čísla a nahraj vygenerovaný data.json. Od druhého záznamu uvidíš vývoj.</p>`; return; }
   const M = (DATA.mortgage||{}).balance, pts = S.map(x=>({d:x.date,t:x.total,m:x.mortgage})).concat([{d:iso(Date.now()),t:EX.total,m:M==null?null:M}]);
   const net = pts.some(p=>p.m!=null);
   mk(charts,"totChart",{ type:"line", data:{labels:pts.map(p=>new Date(p.d).toLocaleDateString("cs-CZ",{day:"numeric",month:"numeric",year:"2-digit"})),datasets:[
@@ -547,7 +550,7 @@ function totalCharts(known){
       scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{grid:{color:V("--line")},border:{display:false},ticks:{callback:tick}}},
       plugins:{legend:{position:"bottom"},tooltip:tip}}});
   const nTot = tot.filter(v=>v!=null).length;
-  $("dcN").textContent = (nTot < 2 ? "Čára Celkem se začne kreslit s dalšími měsíčními snapshoty (Měsíční aktualizace). " : "") +
+  $("dcN").textContent = (nTot < 2 ? "Čára Celkem se začne kreslit s dalšími měsíčními snapshoty (Úpravy dat). " : "") +
     "Zlato a stříbro jsou dopočtené z historických cen (odhad), Edward a penzijko vycházejí z výpisů.";
 }
 
@@ -729,12 +732,36 @@ function mktRender(){
   $("mktNote").textContent = names[MKT.inst] + ". Spotové ceny (ne výkupní)." + (R === "live" ? " Den = posledních 24 hodin, nový bod každou minutu, dokud je stránka otevřená." : "");
 }
 
+/* ============ záložky a zámek úprav ============ */
+const PWHASH = "aa0224bbc4228e6bb350aedad02858e34c6b53c1a9d5013045d91dfd9068f8bf";
+function showTab(t){
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x.id === "tab-"+t));
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab === t));
+  try { sessionStorage.setItem("inv_tab",t); } catch(e){}
+  window.scrollTo({top:0});
+  requestAnimationFrame(()=>{ [...charts,mktChart,projChart,mortChart].forEach(c=>c && c.resize && c.resize()); });
+}
+const isUnlocked = () => { try { return sessionStorage.getItem("inv_unlock") === "1"; } catch(e){ return false; } };
+async function sha256(t){ const b = await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join(""); }
+function openEdit(){ $("bUpd").textContent = "🔓 Úpravy dat"; openDlg(updForm(),()=>{ $("uGen").onclick = updGen; }); }
+function askPw(){
+  openDlg(`<button class="x" onclick="$('dlg').close()">Zavřít</button><h2>Úpravy dat</h2><p class="hint" style="margin-top:0">Zadej heslo.</p><div class="ctl"><label>Heslo<input type="password" id="pw" autocomplete="current-password"></label></div><button class="btn" id="pwOk">Odemknout</button><p class="hint" id="pwErr"></p>`,()=>{
+    const go = async () => { try {
+        if (await sha256($("pw").value) === PWHASH) { try { sessionStorage.setItem("inv_unlock","1"); } catch(e){} openEdit(); } else $("pwErr").textContent = "Nesprávné heslo.";
+      } catch(e){ $("pwErr").textContent = "Heslo funguje jen na zabezpečené adrese (https)."; } };
+    $("pwOk").onclick = go; $("pw").addEventListener("keydown",e=>{ if (e.key === "Enter") go(); }); $("pw").focus(); });
+}
+
 async function init(){
   try { DATA = await getJSON("data.json",{cache:"no-store"}); }
   catch(e){ const why = e && e.message ? "Soubor je poškozený (neplatný JSON): "+e.message : "Soubor data.json se nenašel nebo se nepodařilo stáhnout."; document.body.innerHTML = "<main><h1>Nelze načíst data.json</h1><p class='sub'>"+why+" Na GitHub Pages musí být data.json vedle index.html. Lokálně spusť <code>python -m http.server</code> a otevři localhost.</p></main>"; return; }
   try { HIST = await getJSON("history.json",{cache:"no-store"}); } catch(e){}
+  try { const I = await getJSON("intraday.json",{cache:"no-store"}); if (!HIST) HIST = { daily:[] }; HIST.intraday = I.intraday || []; } catch(e){}
   $("bRep").onclick = () => openDlg(reportHTML(),bindReport);
-  $("bUpd").onclick = () => openDlg(updForm(),()=>{ $("uGen").onclick = updGen; });
+  $("bUpd").onclick = () => isUnlocked() ? openEdit() : askPw();
+  if (isUnlocked()) $("bUpd").textContent = "🔓 Úpravy dat";
+  document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+  { const h = location.hash.slice(1); let t = ["prehled","trhy","kovy","plany","hypoteka"].includes(h) ? h : null; if (!t) { try { t = sessionStorage.getItem("inv_tab"); } catch(e){} } showTab(t || "prehled"); }
   $("pm").value = DATA.gg.monthly; $("tm").value = DATA.tax.dpsMonthly; $("td").value = DATA.tax.dipMonthly; $("te").value = DATA.tax.dipEmployerMonthly||0;
   ["pm","pg"].forEach(id=>$(id).addEventListener("input",projUpdate));
   ["tm","td","te","tr"].forEach(id=>$(id).addEventListener("input",taxUpdate));
