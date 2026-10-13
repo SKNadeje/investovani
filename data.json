@@ -1,13 +1,13 @@
 {
- "updated": "2026-10-07",
+ "updated": "2026-10-13",
  "metals": [
   {
    "id": "gold",
    "name": "Zlato",
    "color": "#c9a227",
    "symbol": "XAU",
-   "grams": 106.0605,
-   "avg": 57646,
+   "grams": 107,
+   "avg": 58005,
    "per": 31.1035,
    "unit": "oz",
    "premium": 0
@@ -29,8 +29,8 @@
    "id": "edward",
    "name": "Edward",
    "color": "#2a8c82",
-   "value": 343641.75,
-   "deposits": 302660,
+   "value": 350039.03,
+   "deposits": 307660,
    "hist": [],
    "parts": [
     {
@@ -153,7 +153,7 @@
      "profit": 47721.83
     }
    ],
-   "asOf": "2026-10-07",
+   "asOf": "2026-10-13",
    "carriedGain": 41808.4,
    "extra": {
     "kpis": [
@@ -645,7 +645,7 @@
    "items": {
     "edward": {
      "value": 20300.9,
-     "deposits": 20000.0
+     "deposits": 20000
     },
     "penze": {
      "value": 162853.44,
@@ -660,7 +660,7 @@
    "items": {
     "edward": {
      "value": 348333.66,
-     "deposits": 321900.0
+     "deposits": 321900
     },
     "penze": {
      "value": 217228.14,
@@ -674,8 +674,8 @@
    "total": null,
    "items": {
     "edward": {
-     "value": 343924.0,
-     "deposits": 302660.0
+     "value": 343924,
+     "deposits": 302660
     },
     "penze": {
      "value": 260628.13,
@@ -714,6 +714,37 @@
     }
    },
    "mortgage": 3081158.91
+  },
+  {
+   "date": "2026-10-13",
+   "total": 976576,
+   "items": {
+    "gold": {
+     "value": 314091.59,
+     "deposits": 199544.59
+    },
+    "silver": {
+     "value": 48122.62,
+     "deposits": 33599.9
+    },
+    "edward": {
+     "value": 350039.03,
+     "deposits": 307660
+    },
+    "penze": {
+     "value": 260628.13,
+     "deposits": 204125.99
+    },
+    "dip": {
+     "value": 3694.71,
+     "deposits": 3706
+    },
+    "syn": {
+     "value": 79363.56,
+     "deposits": 50420
+    }
+   },
+   "mortgage": 3081158.91
   }
  ],
  "mortgage": {
@@ -729,51 +760,51 @@
   "history": [
    {
     "date": "2024-11-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2024-12-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-01-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-02-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-03-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-04-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-05-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-06-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-07-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-08-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-09-30",
-    "balance": 3127500.0
+    "balance": 3127500
    },
    {
     "date": "2025-10-31",
-    "balance": 3127500.0
+    "balance": 3127500
    },
    {
     "date": "2025-11-30",
