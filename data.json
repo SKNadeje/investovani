@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-13",
+ "updated": "2026-10-19",
  "metals": [
   {
    "id": "gold",
@@ -29,7 +29,7 @@
    "id": "edward",
    "name": "Edward",
    "color": "#2a8c82",
-   "value": 350039.03,
+   "value": 349547.23,
    "deposits": 307660,
    "hist": [],
    "parts": [
@@ -153,7 +153,7 @@
      "profit": 47721.83
     }
    ],
-   "asOf": "2026-10-13",
+   "asOf": "2026-10-19",
    "carriedGain": 41808.4,
    "extra": {
     "kpis": [
@@ -307,8 +307,8 @@
    "id": "dip",
    "name": "DIP",
    "color": "#c0623f",
-   "value": 3694.71,
-   "deposits": 3706,
+   "value": 4926.93,
+   "deposits": 4906,
    "hist": [],
    "extra": {
     "notes": [
@@ -745,6 +745,37 @@
     }
    },
    "mortgage": 3081158.91
+  },
+  {
+   "date": "2026-10-19",
+   "total": 970528,
+   "items": {
+    "gold": {
+     "value": 309903.32,
+     "deposits": 199544.59
+    },
+    "silver": {
+     "value": 45522.37,
+     "deposits": 33599.9
+    },
+    "edward": {
+     "value": 349547.23,
+     "deposits": 307660
+    },
+    "penze": {
+     "value": 260628.13,
+     "deposits": 204125.99
+    },
+    "dip": {
+     "value": 4926.93,
+     "deposits": 4906
+    },
+    "syn": {
+     "value": 79363.56,
+     "deposits": 50420
+    }
+   },
+   "mortgage": 3081158.91
   }
  ],
  "mortgage": {
@@ -853,5 +884,6 @@
   ],
   "propertyArea": 82,
   "propertyNote": "byt po kompletní rekonstrukci, 82 m², Trutnov – Krýblice"
- }
+ },
+ "_rev": "2026-10-19T12:19:31.776Z"
 }
