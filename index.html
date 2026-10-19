@@ -337,7 +337,7 @@ function render(p){
   const totalVal = mine.reduce((s,a)=>s+a.value,0);
   const kV = known.reduce((s,a)=>s+a.value,0), kD = known.reduce((s,a)=>s+a.deposits,0);
 
-  $("updated").textContent = "Ruční údaje k " + new Date(DATA.updated).toLocaleDateString("cs-CZ",{day:"numeric",month:"long",year:"numeric"});
+  $("updated").textContent = "Ruční údaje k " + new Date(DATA.updated).toLocaleDateString("cs-CZ",{day:"numeric",month:"long",year:"numeric"}) + (DATA._local ? " (data uložená v tomto prohlížeči)" : "");
   $("status").textContent = live
     ? "Živé ceny (spot): zlato " + fmt(p.usd.XAU*p.fx) + " / oz, stříbro " + fmt((p.usd.XAG||0)*p.fx) + " / oz, kurz " + p.fx.toFixed(2).replace(".",",") + " Kč/USD." + (DATA.metals.some(m=>m.premium) ? " Ocenění s přirážkou: "+DATA.metals.filter(m=>m.premium).map(m=>m.name.toLowerCase()+" "+pct(m.premium)).join(", ")+"." : "") + (p.usd.XAU>0 && p.usd.XAG>0 ? " Poměr zlato/stříbro " + num(p.usd.XAU/p.usd.XAG,1) + "." : "")
     : "Živé ceny se nepodařilo načíst, zlato a stříbro jsou zatím oceněny nákupní cenou.";
@@ -590,18 +590,55 @@ function bindReport(){
     try { await navigator.clipboard.writeText(t); $("rCopy").textContent = "Zkopírováno"; } catch(e){ $("rCopy").textContent = "Nelze kopírovat"; } };
 }
 
-/* --- měsíční aktualizace --- */
+/* --- úpravy dat: formulář, uložení v prohlížeči a do GitHubu --- */
+let SESSION_PW = null;
+const enc = new TextEncoder(), dec = new TextDecoder();
+const b64 = u => { const a = new Uint8Array(u); let t = ""; for (let i = 0; i < a.length; i += 8192) t += String.fromCharCode(...a.subarray(i,i+8192)); return btoa(t); };
+const unb64 = t => Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+async function deriveKey(pw,salt){ const k = await crypto.subtle.importKey("raw",enc.encode(pw),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:200000,hash:"SHA-256"},k,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]); }
+async function tokSave(tok){ const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), key = await deriveKey(SESSION_PW,salt);
+  const ct = await crypto.subtle.encrypt({name:"AES-GCM",iv},key,enc.encode(tok)); localStorage.setItem("inv_tok",JSON.stringify({s:b64(salt),i:b64(iv),c:b64(ct)})); }
+async function tokLoad(){ const o = JSON.parse(localStorage.getItem("inv_tok")||"null"); if (!o) return null;
+  return dec.decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(o.i)},await deriveKey(SESSION_PW,unb64(o.s)),unb64(o.c))); }
+const hasTok = () => { try { return !!localStorage.getItem("inv_tok"); } catch(e){ return false; } };
+async function ghSave(txt,tok){
+  const url = "https://api.github.com/repos/"+DATA.repo+"/contents/data.json", h = {Authorization:"Bearer "+tok,Accept:"application/vnd.github+json"};
+  const g = await fetch(url+"?ref=main",{headers:h}); if (!g.ok) throw new Error("nelze číst data.json ("+g.status+")");
+  const sha = (await g.json()).sha;
+  const p = await fetch(url,{method:"PUT",headers:{...h,"Content-Type":"application/json"},body:JSON.stringify({message:"Úprava dat z webu",content:b64(enc.encode(txt)),sha,branch:"main"})});
+  if (!p.ok) { const e = await p.json().catch(()=>({})); throw new Error(p.status+" "+(e.message||"")); }
+}
+function pickData(remote){
+  try { const o = JSON.parse(localStorage.getItem("inv_override")||"null"); if (o && (o._rev||"") > (remote._rev||"")) { o._local = true; return o; } } catch(e){}
+  return remote;
+}
+function tokPanel(){
+  return hasTok()
+    ? `<p class="hint">Token je uložený v tomto zařízení (zašifrovaný heslem). Změny se ukládají i do GitHubu.</p><button class="btn" id="tokDel">Odstranit token</button>`
+    : `<p class="hint">Jednorázově: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token. Repository access: jen tento repozitář. Permissions: Contents → Read and write. Token vlož sem. Bez tokenu se změny uloží jen v tomto prohlížeči.</p><div class="ctl"><label>Token<input type="password" id="tokIn" autocomplete="off"></label></div><button class="btn" id="tokSaveBtn">Uložit token</button><p class="hint" id="tokMsg"></p>`;
+}
 function updForm(){
   const row = (id,l,v) => `<label>${l}<input type="number" step="0.01" id="u_${id}" value="${v==null?"":v}"></label>`;
-  let h = `<button class="x" id="dx3" onclick="$('dlg').close()">Zavřít</button><h2>Měsíční aktualizace</h2><p class="hint" style="margin-top:0">Přepiš čísla podle aplikací a vygeneruj nový data.json. Ceny kovů se doplní z živého spotu.</p><div class="ctl">`;
+  let h = `<button class="x" id="dx3" onclick="$('dlg').close()">Zavřít</button><h2>Měsíční aktualizace</h2><p class="hint" style="margin-top:0">Přepiš čísla podle aplikací a ulož. Ceny kovů se doplní z živého spotu.</p><div class="ctl">`;
   DATA.metals.forEach(m=>{ h += row(m.id+"_g",m.name+": gramy celkem",+m.grams.toFixed(2)) + row(m.id+"_a",m.name+": Ø cena / "+m.unit,m.avg) + row(m.id+"_p",m.name+": přirážka k spotu (%)",m.premium||0); });
   DATA.manual.forEach(a=>{ if (a.funds) a.funds.forEach((f,i)=>{ h += row(a.id+"_f"+i+"v",a.name+", "+f.name+": hodnota",f.value) + row(a.id+"_f"+i+"p",a.name+", "+f.name+": zisk",f.profit); });
     else h += row(a.id+"_v",a.name+": hodnota",a.value) + row(a.id+"_d",a.name+": vloženo",a.deposits==null?null:+a.deposits.toFixed(2)); });
-  return h + row("mort","Hypotéka: zbývá splatit",(DATA.mortgage||{}).balance) + `</div><button class="btn" id="uGen">Vygenerovat data.json</button><div id="uOut" style="margin-top:12px"></div>`;
+  h += row("mort","Hypotéka: zbývá splatit",(DATA.mortgage||{}).balance) + `</div><button class="btn" id="uGen">Uložit změny</button><div id="uOut" class="hint" style="margin-top:10px"></div>`;
+  h += `<details style="margin-top:14px"><summary>Ukládání do GitHubu (data budou i na jiných zařízeních)</summary>${tokPanel()}</details>`;
+  h += `<p class="hint"><a href="#" id="uReset">Zahodit změny z tohoto prohlížeče a načíst data z GitHubu</a></p>`;
+  return h;
 }
-function updGen(){
+function bindEdit(){
+  $("uGen").onclick = updGen;
+  $("uReset").onclick = e => { e.preventDefault(); try { localStorage.removeItem("inv_override"); } catch(x){} location.reload(); };
+  if ($("tokSaveBtn")) $("tokSaveBtn").onclick = async () => { const t = $("tokIn").value.trim(); if (!t) return;
+    try { await tokSave(t); $("dlg").close(); openEdit(); } catch(e){ $("tokMsg").textContent = "Token se nepodařilo uložit."; } };
+  if ($("tokDel")) $("tokDel").onclick = () => { try { localStorage.removeItem("inv_tok"); } catch(e){} $("dlg").close(); openEdit(); };
+}
+async function updGen(){
   const g = id => { const v = $("u_"+id); return v && v.value!=="" ? +v.value : null; };
-  const N = JSON.parse(JSON.stringify(DATA)), today = iso(Date.now()); N.updated = today;
+  const N = JSON.parse(JSON.stringify(DATA)); delete N._local; const today = iso(Date.now()); N.updated = today; N._rev = new Date().toISOString();
   N.metals.forEach(m=>{ m.grams = g(m.id+"_g") ?? m.grams; m.avg = g(m.id+"_a") ?? m.avg; m.premium = g(m.id+"_p") ?? m.premium; });
   N.manual.forEach(a=>{
     if (a.funds) { a.funds.forEach((f,i)=>{ f.value = g(a.id+"_f"+i+"v") ?? f.value; f.profit = g(a.id+"_f"+i+"p") ?? f.profit; }); a.value = +a.funds.reduce((s,f)=>s+f.value,0).toFixed(2); a.asOf = today; }
@@ -611,11 +648,14 @@ function updGen(){
   const snap = { date:today, total:Math.round(items.filter(a=>!a.exclude).reduce((s,a)=>s+a.value,0)), items:{}, mortgage:N.mortgage ? N.mortgage.balance : null };
   items.forEach(a=>{ snap.items[a.id] = { value:Math.round(a.value*100)/100, deposits:a.deposits==null?null:Math.round(a.deposits*100)/100 }; });
   N.snapshots = (N.snapshots||[]).filter(x=>x.date!==today).concat([snap]);
-  const txt = JSON.stringify(N,null,1), link = DATA.repo ? `https://github.com/${DATA.repo}/edit/main/data.json` : null;
-  $("uOut").innerHTML = `<textarea id="uTxt" rows="9" readonly></textarea><div class="ctl" style="margin-top:8px"><button class="btn" id="uCopy">Kopírovat</button>${link?`<a class="btn" href="${link}" target="_blank" rel="noopener" style="text-decoration:none">Otevřít data.json na GitHubu</a>`:""}</div>
-    <p class="hint">Postup: 1) Kopírovat. 2) Otevři data.json na GitHubu (tužka Edit). 3) Označ vše, vlož, dole Commit changes. Web se obnoví do minuty.</p>`;
-  $("uTxt").value = txt;
-  $("uCopy").onclick = async () => { try { await navigator.clipboard.writeText(txt); $("uCopy").textContent = "Zkopírováno"; } catch(e){ $("uTxt").select(); } };
+  DATA = N; try { localStorage.setItem("inv_override",JSON.stringify(N)); } catch(e){}
+  render(P);
+  let msg = "✓ Uloženo v tomto prohlížeči."; $("uOut").textContent = msg;
+  if (hasTok()) {
+    $("uOut").textContent = msg + " Ukládám do GitHubu…";
+    try { await ghSave(JSON.stringify(N,null,1),await tokLoad()); $("uOut").textContent = msg + " ✓ Uloženo do GitHubu, web se aktualizuje asi za minutu."; }
+    catch(e){ $("uOut").textContent = msg + " ✗ GitHub: " + (e.message || "chyba") + ". Změny jsou jen v tomto prohlížeči."; }
+  } else $("uOut").textContent = msg + " Do GitHubu se neukládá (chybí token), vidíš to jen v tomto prohlížeči.";
 }
 
 /* --- hypotéka --- */
@@ -741,25 +781,24 @@ function showTab(t){
   window.scrollTo({top:0});
   requestAnimationFrame(()=>{ [...charts,mktChart,projChart,mortChart].forEach(c=>c && c.resize && c.resize()); });
 }
-const isUnlocked = () => { try { return sessionStorage.getItem("inv_unlock") === "1"; } catch(e){ return false; } };
+const isUnlocked = () => !!SESSION_PW;
 async function sha256(t){ const b = await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join(""); }
-function openEdit(){ $("bUpd").textContent = "🔓 Úpravy dat"; openDlg(updForm(),()=>{ $("uGen").onclick = updGen; }); }
+function openEdit(){ $("bUpd").textContent = "🔓 Úpravy dat"; openDlg(updForm(),bindEdit); }
 function askPw(){
   openDlg(`<button class="x" onclick="$('dlg').close()">Zavřít</button><h2>Úpravy dat</h2><p class="hint" style="margin-top:0">Zadej heslo.</p><div class="ctl"><label>Heslo<input type="password" id="pw" autocomplete="current-password"></label></div><button class="btn" id="pwOk">Odemknout</button><p class="hint" id="pwErr"></p>`,()=>{
     const go = async () => { try {
-        if (await sha256($("pw").value) === PWHASH) { try { sessionStorage.setItem("inv_unlock","1"); } catch(e){} openEdit(); } else $("pwErr").textContent = "Nesprávné heslo.";
+        if (await sha256($("pw").value) === PWHASH) { SESSION_PW = $("pw").value; openEdit(); } else $("pwErr").textContent = "Nesprávné heslo.";
       } catch(e){ $("pwErr").textContent = "Heslo funguje jen na zabezpečené adrese (https)."; } };
     $("pwOk").onclick = go; $("pw").addEventListener("keydown",e=>{ if (e.key === "Enter") go(); }); $("pw").focus(); });
 }
 
 async function init(){
-  try { DATA = await getJSON("data.json",{cache:"no-store"}); }
+  try { DATA = pickData(await getJSON("data.json",{cache:"no-store"})); }
   catch(e){ const why = e && e.message ? "Soubor je poškozený (neplatný JSON): "+e.message : "Soubor data.json se nenašel nebo se nepodařilo stáhnout."; document.body.innerHTML = "<main><h1>Nelze načíst data.json</h1><p class='sub'>"+why+" Na GitHub Pages musí být data.json vedle index.html. Lokálně spusť <code>python -m http.server</code> a otevři localhost.</p></main>"; return; }
   try { HIST = await getJSON("history.json",{cache:"no-store"}); } catch(e){}
   try { const I = await getJSON("intraday.json",{cache:"no-store"}); if (!HIST) HIST = { daily:[] }; HIST.intraday = I.intraday || []; } catch(e){}
   $("bRep").onclick = () => openDlg(reportHTML(),bindReport);
   $("bUpd").onclick = () => isUnlocked() ? openEdit() : askPw();
-  if (isUnlocked()) $("bUpd").textContent = "🔓 Úpravy dat";
   document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
   { const h = location.hash.slice(1); let t = ["prehled","trhy","kovy","plany","hypoteka"].includes(h) ? h : null; if (!t) { try { t = sessionStorage.getItem("inv_tab"); } catch(e){} } showTab(t || "prehled"); }
   $("pm").value = DATA.gg.monthly; $("tm").value = DATA.tax.dpsMonthly; $("td").value = DATA.tax.dipMonthly; $("te").value = DATA.tax.dipEmployerMonthly||0;
