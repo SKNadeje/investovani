@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-19",
+ "updated": "2026-10-31",
  "metals": [
   {
    "id": "gold",
@@ -29,18 +29,18 @@
    "id": "edward",
    "name": "Edward",
    "color": "#2a8c82",
-   "value": 349547.23,
+   "value": 348099.81,
    "deposits": 307660,
    "hist": [],
    "parts": [
     {
      "l": "Vloženo",
-     "v": 302660,
+     "v": 307660,
      "c": "#2a8c82"
     },
     {
      "l": "Zisk",
-     "v": 40981.75,
+     "v": 40439.81,
      "c": "#1e7a52"
     }
    ],
@@ -48,7 +48,7 @@
     "kpis": [
      {
       "l": "Vklady od založení",
-      "v": 1485000,
+      "v": 1490000,
       "t": "czk"
      },
      {
@@ -58,27 +58,27 @@
      },
      {
       "l": "Výnosy portfolií",
-      "v": 47074.28,
+      "v": 46580.79,
       "t": "sg"
      },
      {
       "l": "Poplatky od založení",
-      "v": -5810.28,
+      "v": -6140.98,
       "t": "czk"
      },
      {
       "l": "Roční výnos podle Edwardu (p. a.)",
-      "v": 5.41,
+      "v": 5.12,
       "t": "pct"
      },
      {
-      "l": "Poplatky v 9/2026",
-      "v": "351 Kč, z toho pobídka IZ 231 Kč (66 %)",
+      "l": "Poplatky v 10/2026",
+      "v": "331 Kč, z toho pobídka IZ 221 Kč (67 %)",
       "t": "txt"
      }
     ],
     "table": {
-     "title": "Portfolia (report k 30. 9. 2026)",
+     "title": "Portfolia (report k 31. 10. 2026)",
      "cols": [
       {
        "h": "Portfolio",
@@ -100,34 +100,34 @@
      "rows": [
       [
        "Dlouhodobé (Růstová, riziko 8)",
-       4973.65,
-       752.68,
-       10.81
+       4970.18,
+       749.21,
+       10.19
       ],
       [
        "Střednědobé (Opatrná růstová, riziko 6)",
-       188550.19,
-       33411.13,
-       14.53
+       187714.73,
+       32575.67,
+       13.34
       ],
       [
        "Krátkodobé (Hotovostní, riziko 1)",
-       146966.11,
-       12910.47,
+       151481.55,
+       13255.91,
        2.62
       ],
       [
        "Hotovost v peněžence",
-       3434.05,
+       3933.35,
        null,
        null
       ]
      ]
     },
     "notes": [
-     "Portfolia jsou z měsíčního reportu k 30. 9. 2026 (celkem 343 924 Kč). Karta ukazuje novější stav z aplikace.",
+     "Portfolia jsou z měsíčního reportu k 31. 10. 2026 (celkem 348 100 Kč). V říjnu přibylo 5 000 Kč vkladů, výnosy byly -493 Kč (-0,14 %) a poplatky 331 Kč.",
      "Poplatek za správu vychází zhruba na 1,1 % p. a. z majetku, asi dvě třetiny z něj tvoří pobídka investičnímu zprostředkovateli (údaj z reportu za 9/2026).",
-     "Od založení prošlo účtem 1 485 000 Kč vkladů a 1 182 340 Kč výběrů. Většina je dočasné parkování 1 300 000 Kč v roce 2025, z něhož šlo 1 042 500 Kč na mimořádnou splátku hypotéky."
+     "Od založení prošlo účtem 1 490 000 Kč vkladů a 1 182 340 Kč výběrů. Většina je dočasné parkování 1 300 000 Kč v roce 2025, z něhož šlo 1 042 500 Kč na mimořádnou splátku hypotéky."
     ]
    }
   },
@@ -645,7 +645,7 @@
    "items": {
     "edward": {
      "value": 20300.9,
-     "deposits": 20000
+     "deposits": 20000.0
     },
     "penze": {
      "value": 162853.44,
@@ -660,7 +660,7 @@
    "items": {
     "edward": {
      "value": 348333.66,
-     "deposits": 321900
+     "deposits": 321900.0
     },
     "penze": {
      "value": 217228.14,
@@ -674,8 +674,8 @@
    "total": null,
    "items": {
     "edward": {
-     "value": 343924,
-     "deposits": 302660
+     "value": 343924.0,
+     "deposits": 302660.0
     },
     "penze": {
      "value": 260628.13,
@@ -776,6 +776,17 @@
     }
    },
    "mortgage": 3081158.91
+  },
+  {
+   "date": "2026-10-31",
+   "total": null,
+   "items": {
+    "edward": {
+     "value": 348099.81,
+     "deposits": 307660
+    }
+   },
+   "mortgage": null
   }
  ],
  "mortgage": {
@@ -791,51 +802,51 @@
   "history": [
    {
     "date": "2024-11-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2024-12-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2025-01-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2025-02-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2025-03-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2025-04-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2025-05-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2025-06-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2025-07-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2025-08-28",
-    "balance": 4170000
+    "balance": 4170000.0
    },
    {
     "date": "2025-09-30",
-    "balance": 3127500
+    "balance": 3127500.0
    },
    {
     "date": "2025-10-31",
-    "balance": 3127500
+    "balance": 3127500.0
    },
    {
     "date": "2025-11-30",
@@ -885,5 +896,5 @@
   "propertyArea": 82,
   "propertyNote": "byt po kompletní rekonstrukci, 82 m², Trutnov – Krýblice"
  },
- "_rev": "2026-10-19T12:19:31.776Z"
+ "_rev": "2026-11-09T19:55:02.369Z"
 }
