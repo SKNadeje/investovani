@@ -896,5 +896,10 @@
   "propertyArea": 82,
   "propertyNote": "byt po kompletní rekonstrukci, 82 m², Trutnov – Krýblice"
  },
- "_rev": "2026-11-09T19:55:02.369Z"
+ "_rev": "2026-11-09T19:55:02.369Z",
+ "electricity": {
+  "readings": [],
+  "tariffs": [],
+  "statements": []
+ }
 }
