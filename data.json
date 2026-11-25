@@ -898,143 +898,64 @@
  },
  "_rev": "2026-11-09T19:55:02.369Z",
  "electricity": {
-  "ean": "859182400705805868",
-  "meter": "2455004959",
-  "address": "Mánesova 370, 541 01 Trutnov",
-  "supplier": "CENTROPOL ENERGY, a.s.",
-  "contractNumber": "9276174",
-  "distributor": "ČEZ Distribuce, a.s.",
-  "breaker": "1x20 A",
   "readings": [
    {
     "date": "2025-02-04",
-    "vt": 136,
-    "nt": 0,
-    "type": "počáteční stav (vyúčtování 6150168743)",
-    "source": "6150168743.pdf"
+    "v": 136,
+    "nt": 0
    },
    {
     "date": "2025-03-14",
-    "vt": 286,
-    "nt": 0,
-    "type": "standardní odečet / změna období",
-    "source": "6150168743.pdf"
+    "v": 286,
+    "nt": 0
    },
    {
     "date": "2025-05-26",
-    "vt": 597,
-    "nt": 0,
-    "type": "konečný stav (vyúčtování 6150168743)",
-    "source": "6150168743.pdf"
-   },
-   {
-    "date": "2025-05-27",
-    "vt": 597,
-    "nt": 0,
-    "type": "počáteční stav (vyúčtování 6160159306)",
-    "source": "6160159306.pdf"
+    "v": 597,
+    "nt": 0
    },
    {
     "date": "2025-08-31",
-    "vt": 999,
-    "nt": 0,
-    "type": "změna ceny",
-    "source": "6160159306.pdf"
+    "v": 999,
+    "nt": 0
    },
    {
     "date": "2025-12-31",
-    "vt": 1609,
-    "nt": 0,
-    "type": "odhad spotřeby",
-    "source": "6160159306.pdf"
+    "v": 1609,
+    "nt": 0
    },
    {
     "date": "2026-05-22",
-    "vt": 2301,
-    "nt": 0,
-    "type": "standardní odečet / konečný stav (vyúčtování 6160159306)",
-    "source": "6160159306.pdf"
+    "v": 2301,
+    "nt": 0
    }
   ],
   "tariffs": [
    {
-    "name": "FIXNĚ PRO ZAČÁTEK na 1,5 roku",
-    "distributionRate": "D02d",
-    "validFrom": "2025-02-04",
-    "validTo": "2026-08-03",
-    "powerPriceWithoutVatPerMwh": 3064,
-    "fixedFeeWithoutVatPerMonth": 118,
-    "discountPercent": 15,
-    "discountValidFrom": "2025-02-04",
-    "discountValidTo": "2026-08-03",
-    "note": "Sleva 15 % ze spotřeby VT (SLEVA_15_P_(MWh))"
+    "from": "2025-02-04",
+    "kwh": 4.31,
+    "monthly": 274.61
    },
    {
-    "name": "FIXNĚ na 1 rok",
-    "distributionRate": "D02d",
-    "validFrom": "2026-08-04",
-    "validTo": "2027-08-03",
-    "priceListEffectiveFrom": "2026-02-01",
-    "distributionEffectiveFrom": "2026-01-01",
-    "vtWithVatPerMwh": 5378.82,
-    "vtWithoutVatPerMwh": 4445.31,
-    "fixedFeeWithVatPerMonth": 158.35,
-    "fixedFeeWithoutVatPerMonth": 130.87,
-    "breakerFee1x20AWithVatPerMonth": 123.42,
-    "breakerFee1x20AWithoutVatPerMonth": 102.0,
-    "systemServicesWithVatPerMwh": 198.73,
-    "systemServicesWithoutVatPerMwh": 164.24,
-    "nonGridInfrastructureWithVatPerMonth": 15.57,
-    "nonGridInfrastructureWithoutVatPerMonth": 12.87,
-    "electricityTaxWithVatPerMwh": 34.24,
-    "electricityTaxWithoutVatPerMwh": 28.3,
-    "note": "Dle ceníku FIXNĚ na 1 rok (účinný od 1. 2. 2026, distribuce ČEZ od 1. 1. 2026); od 04.08.2027 přechod na BEZ ZÁVAZKU."
+    "from": "2026-01-01",
+    "kwh": 5.38,
+    "monthly": 297.34
    }
   ],
   "statements": [
    {
-    "invoiceNumber": "6150168743",
-    "type": "řádné vyúčtování",
-    "periodFrom": "2025-02-04",
-    "periodTo": "2025-05-26",
-    "issuedDate": "2025-05-28",
-    "dueDate": "2025-06-27",
-    "consumptionMwh": 0.461,
-    "consumptionVtKwh": 461,
-    "consumptionNtKwh": 0,
-    "totalWithoutVat": 3335.11,
-    "vat": 700.37,
-    "totalWithVat": 4035.48,
-    "powerWithVat": 1985.55,
-    "distributionWithVat": 2034.14,
-    "electricityTaxWithVat": 15.79,
-    "advancesPaidWithVat": 4160.0,
-    "balanceResult": -125.0,
-    "balanceNote": "přeplatek 125 Kč (vrácení na 295511827/0300, VS 6150168743)",
-    "nextAdvanceMonthlyWithVat": 1230.0,
-    "source": "6150168743.pdf"
+    "from": "2025-02-04",
+    "to": "2025-05-26",
+    "kwh": 461,
+    "cost": 4035.48,
+    "paid": 4160
    },
    {
-    "invoiceNumber": "6160159306",
-    "type": "řádné vyúčtování",
-    "periodFrom": "2025-05-27",
-    "periodTo": "2026-05-22",
-    "issuedDate": "2026-05-25",
-    "dueDate": "2026-06-24",
-    "consumptionMwh": 1.704,
-    "consumptionVtKwh": 1704,
-    "consumptionNtKwh": 0,
-    "totalWithoutVat": 11564.54,
-    "vat": 2428.56,
-    "totalWithVat": 13993.1,
-    "powerWithVat": 7064.79,
-    "distributionWithVat": 6869.96,
-    "electricityTaxWithVat": 58.35,
-    "advancesPaidWithVat": 14950.0,
-    "balanceResult": -957.0,
-    "balanceNote": "přeplatek 957 Kč (vrácení na 295511827/0300, VS 6160159306)",
-    "nextAdvanceMonthlyWithVat": 1390.0,
-    "source": "6160159306.pdf"
+    "from": "2025-05-27",
+    "to": "2026-05-22",
+    "kwh": 1704,
+    "cost": 13993.1,
+    "paid": 14950
    }
   ]
  }
