@@ -105,6 +105,11 @@ section.card,.cards>.card{animation:rise .5s ease both}
 .nav button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 @media(prefers-color-scheme:dark){.nav button.on{background:var(--gold);color:#10243a;border-color:var(--gold)}}
 .tab{display:none}.tab.on{display:block}
+body.sec-el #sec-inv,body.sec-el .only-inv{display:none}
+body:not(.sec-el) #sec-el,body:not(.sec-el) .only-el{display:none}
+.bigseg{margin:0 0 14px}.bigseg button{font-size:.95rem;padding:8px 22px}
+.h3{margin:18px 0 6px;font-size:1rem;font-family:"Bricolage Grotesque","Instrument Sans",sans-serif}
+.rm{border:0;background:none;color:var(--down);cursor:pointer;font-size:1.05rem;padding:0 6px}
 @media print{:root{--bg:#fff;--card:#fff;--ink:#000;--mute:#555;--line:#ccc;--up:#1e7a52;--down:#b23a2e}main,.noprint{display:none!important}dialog{position:static;border:none;width:100%;max-height:none}}
 </style>
 </head>
@@ -112,10 +117,11 @@ section.card,.cards>.card{animation:rise .5s ease both}
 <main>
   <header class="hero">
     <div class="hero-top">
-      <div><div class="eyebrow">Osobní přehled</div><h1>Moje investice</h1><p class="sub" id="updated"></p><p class="status" id="status"></p></div>
-      <div class="acts"><button class="btn" id="bRep">Měsíční report</button><button class="btn" id="bUpd">🔒 Úpravy dat</button></div>
+      <div><div class="seg bigseg" id="topnav"><button data-sec="inv" class="on">Investice</button><button data-sec="el">Elektřina</button></div><div class="eyebrow" id="eyebrow">Osobní přehled</div><h1 id="h1">Moje investice</h1><p class="sub only-inv" id="updated"></p><p class="status only-inv" id="status"></p><p class="sub only-el" id="elSub"></p></div>
+      <div class="acts"><button class="btn only-inv" id="bRep">Měsíční report</button><button class="btn only-inv" id="bUpd">🔒 Úpravy dat</button><button class="btn only-el" id="bElEdit">🔒 Přidat údaje</button></div>
     </div>
   </header>
+  <div id="sec-inv">
   <nav class="nav" id="tabs"><button data-tab="prehled" class="on">Přehled</button><button data-tab="trhy">Trhy</button><button data-tab="kovy">Kovy</button><button data-tab="plany">Plány</button><button data-tab="hypoteka">Hypotéka</button></nav>
 
   <div class="tab on" id="tab-prehled">
@@ -186,6 +192,21 @@ section.card,.cards>.card{animation:rise .5s ease both}
   <section class="card" style="margin-top:16px" id="mortgage"><h2>Hypotéka</h2><div id="mortWrap"></div></section>
   </div>
   <footer>Zlato a stříbro se oceňuje podle spotové ceny (výkup u obchodníka bývá nižší). Řádek 2026* je odhad z průměrných cen. Data uprav v souboru <code>data.json</code>.</footer>
+  </div>
+  <div id="sec-el">
+    <div class="kpis" id="elK"></div>
+    <section class="card" id="elChartCard" style="margin-top:16px">
+      <h2>Spotřeba a cena po měsících</h2>
+      <div class="seg" id="elMetric"></div><div class="seg" id="elView"></div>
+      <div class="chart" style="height:320px"><canvas id="elChart"></canvas></div>
+      <p class="hint" id="elNote"></p>
+    </section>
+    <section class="card" style="margin-top:16px"><h2>Stavy elektroměru</h2><div class="wrap"><table id="elT"></table></div></section>
+    <section class="card" style="margin-top:16px"><h2>Vyúčtování</h2><div class="wrap"><table id="elS"></table></div></section>
+    <section class="card" style="margin-top:16px"><h2>Tarif</h2><div class="wrap"><table id="elTr"></table></div></section>
+    <p class="hint" id="elMsg"></p>
+    <footer>Měsíční spotřeba se dopočítává z rozdílů stavů elektroměru rovnoměrně po dnech, cena je spotřeba krát cena tarifu plus stálé platby. Ceny zadávej včetně DPH a všech složek.</footer>
+  </div>
 </main>
 <dialog id="dlg"><button class="x" id="dx">Zavřít</button><div id="dbody"></div></dialog>
 
@@ -410,7 +431,7 @@ function extras(){
   EX = { costNow: gold.deposits+silv.deposits, valNow: gold.value+silv.value, total: ITEMS.filter(a=>!a.exclude).reduce((t,a)=>t+a.value,0) };
   if (HIST && HIST.daily && HIST.daily.length) metalsHistory(gold,silv);
   else $("mhWrap").innerHTML = `<p class="hint">Historické ceny zatím nejsou. V GitHubu otevři Actions → Deploy Pages → Run workflow. Po doběhnutí uvidíš v souhrnu běhu, který zdroj cen funguje. Soubor <code>history.json</code> se pak objeví i v repozitáři.</p>`;
-  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); mortUpdate(); mktRender();
+  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); mortUpdate(); mktRender(); elRender();
 }
 
 function metalsHistory(gold,silv){
@@ -625,7 +646,7 @@ function updForm(){
   DATA.manual.forEach(a=>{ if (a.funds) a.funds.forEach((f,i)=>{ h += row(a.id+"_f"+i+"v",a.name+", "+f.name+": hodnota",f.value) + row(a.id+"_f"+i+"p",a.name+", "+f.name+": zisk",f.profit); });
     else h += row(a.id+"_v",a.name+": hodnota",a.value) + row(a.id+"_d",a.name+": vloženo",a.deposits==null?null:+a.deposits.toFixed(2)); });
   h += row("mort","Hypotéka: zbývá splatit",(DATA.mortgage||{}).balance) + `</div><button class="btn" id="uGen">Uložit změny</button><div id="uOut" class="hint" style="margin-top:10px"></div>`;
-  h += `<details style="margin-top:14px"><summary>Ukládání do GitHubu (data budou i na jiných zařízeních)</summary>${tokPanel()}</details>`;
+  h += `<details style="margin-top:14px" ${hasTok()?"":"open"}><summary><b>Nastavení ukládání do GitHubu</b> (data budou i na jiných zařízeních)</summary>${tokPanel()}</details>`;
   h += `<p class="hint"><a href="#" id="uReset">Zahodit změny z tohoto prohlížeče a načíst data z GitHubu</a></p>`;
   return h;
 }
@@ -784,12 +805,144 @@ function showTab(t){
 const isUnlocked = () => !!SESSION_PW;
 async function sha256(t){ const b = await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join(""); }
 function openEdit(){ $("bUpd").textContent = "🔓 Úpravy dat"; openDlg(updForm(),bindEdit); }
-function askPw(){
+function askPw(after){
   openDlg(`<button class="x" onclick="$('dlg').close()">Zavřít</button><h2>Úpravy dat</h2><p class="hint" style="margin-top:0">Zadej heslo.</p><div class="ctl"><label>Heslo<input type="password" id="pw" autocomplete="current-password"></label></div><button class="btn" id="pwOk">Odemknout</button><p class="hint" id="pwErr"></p>`,()=>{
     const go = async () => { try {
-        if (await sha256($("pw").value) === PWHASH) { SESSION_PW = $("pw").value; openEdit(); } else $("pwErr").textContent = "Nesprávné heslo.";
+        if (await sha256($("pw").value) === PWHASH) { SESSION_PW = $("pw").value; (after || openEdit)(); } else $("pwErr").textContent = "Nesprávné heslo.";
       } catch(e){ $("pwErr").textContent = "Heslo funguje jen na zabezpečené adrese (https)."; } };
     $("pwOk").onclick = go; $("pw").addEventListener("keydown",e=>{ if (e.key === "Enter") go(); }); $("pw").focus(); });
+}
+
+/* ============ Elektřina ============ */
+let elChart = null; const EL = { metric:"kwh", view:"years" };
+const MN = ["led","úno","bře","dub","kvě","čvn","čvc","srp","zář","říj","lis","pro"];
+const dim = (y,m) => new Date(Date.UTC(y,m+1,0)).getUTCDate();
+const pad2 = n => String(n).padStart(2,"0");
+function tariffAt(T,t){ if (!T || !T.length) return null; const s = [...T].sort((a,b)=>a.from.localeCompare(b.from)), d = new Date(t).toISOString().slice(0,10); let r = s[0]; s.forEach(x=>{ if (x.from <= d) r = x; }); return r; }
+function elCalc(){
+  const E = DATA.electricity || {}, rd = [...(E.readings||[])].sort((a,b)=>a.date.localeCompare(b.date)), days = [], ints = [];
+  for (let i = 1; i < rd.length; i++) {
+    const a = rd[i-1], b = rd[i], t0 = Date.parse(a.date), t1 = Date.parse(b.date), nd = Math.round((t1-t0)/864e5);
+    const vt = b.v-a.v, nt = (a.nt!=null && b.nt!=null) ? b.nt-a.nt : 0, kwh = vt+nt;
+    const iv = { from:a.date, to:b.date, nd, kwh, cost:0, hasCost:false, bad: nd <= 0 || vt < 0 || nt < 0 };
+    if (!iv.bad) for (let k = 0; k < nd; k++) {
+      const t = t0+k*864e5, d = new Date(t), tf = tariffAt(E.tariffs,t);
+      const cost = tf ? (vt/nd)*tf.kwh + (nt/nd)*(tf.kwhNT!=null ? tf.kwhNT : tf.kwh) + (tf.monthly||0)/dim(d.getUTCFullYear(),d.getUTCMonth()) : null;
+      days.push({t,kwh:kwh/nd,cost:cost||0,hasCost:cost!=null}); if (cost!=null) { iv.cost += cost; iv.hasCost = true; }
+    }
+    ints.push(iv);
+  }
+  const mon = {};
+  days.forEach(x=>{ const d = new Date(x.t), key = d.getUTCFullYear()+"-"+pad2(d.getUTCMonth()+1);
+    const m = mon[key] || (mon[key] = {kwh:0,cost:0,days:0,hasCost:false,y:d.getUTCFullYear(),m:d.getUTCMonth()}); m.kwh += x.kwh; m.cost += x.cost; m.days++; if (x.hasCost) m.hasCost = true; });
+  return { rd, days, ints, mon, E };
+}
+function elInit(){
+  const mk3 = (id,arr,key) => { $(id).innerHTML = arr.map(([k,l])=>`<button data-k="${k}">${l}</button>`).join("");
+    $(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{ EL[key] = b.dataset.k; elRender(); }); };
+  mk3("elMetric",[["kwh","Spotřeba (kWh)"],["cost","Cena (Kč)"]],"metric"); mk3("elView",[["years","Porovnání let"],["line","Časová osa"]],"view");
+}
+function elRender(){
+  if (!$("elK")) return;
+  document.querySelectorAll("#elMetric button").forEach(b=>b.classList.toggle("on",b.dataset.k === EL.metric));
+  document.querySelectorAll("#elView button").forEach(b=>b.classList.toggle("on",b.dataset.k === EL.view));
+  const C = elCalc(), E = C.E, rd = C.rd, adm = isUnlocked(), rm = (k,id) => adm ? `<td><button class="rm" data-del="${k}" data-id="${id}" title="Smazat">×</button></td>` : "";
+  if (elChart) { elChart.destroy(); elChart = null; }
+  // tabulky
+  const ivBy = {}; C.ints.forEach(i=>ivBy[i.to] = i);
+  $("elT").innerHTML = `<tr><th>Datum</th><th>Stav</th><th>Spotřeba od minulého</th><th>Dní</th><th>kWh / den</th><th>Cena</th>${adm?"<th></th>":""}</tr>` +
+    (rd.length ? [...rd].reverse().map(r=>{ const i = ivBy[r.date], st = num(r.v,1) + (r.nt!=null ? " / "+num(r.nt,1) : "");
+      return `<tr><td>${new Date(r.date).toLocaleDateString("cs-CZ")}</td><td>${st}</td><td>${i ? (i.bad ? '<span class="down">chybný údaj</span>' : num(i.kwh,1)+" kWh") : "—"}</td><td>${i?i.nd:"—"}</td><td>${i&&!i.bad&&i.nd?num(i.kwh/i.nd,1):"—"}</td><td>${i&&i.hasCost?fmt(i.cost):"—"}</td>${rm("readings",r.date)}</tr>`; }).join("")
+     : `<tr><td colspan="7" style="text-align:left;color:var(--mute)">Zatím žádné stavy. Klikni nahoře na Přidat údaje.</td></tr>`);
+  const stm = [...(E.statements||[])].sort((a,b)=>b.to.localeCompare(a.to));
+  $("elS").innerHTML = `<tr><th>Období</th><th>Spotřeba</th><th>Vyúčtováno</th><th>Zálohy</th><th>Přeplatek / nedoplatek</th><th>Kč / kWh</th>${adm?"<th></th>":""}</tr>` +
+    (stm.length ? stm.map(x=>{ const d = x.paid!=null ? x.paid-x.cost : null;
+      return `<tr><td>${new Date(x.from).toLocaleDateString("cs-CZ")} – ${new Date(x.to).toLocaleDateString("cs-CZ")}</td><td>${num(x.kwh,0)} kWh</td><td>${fmt(x.cost)}</td><td>${x.paid!=null?fmt(x.paid):"—"}</td><td class="${d==null?"":cls(d)}">${d==null?"—":sg(d)}</td><td>${x.kwh?num(x.cost/x.kwh,2)+" Kč":"—"}</td>${rm("statements",x.from+"|"+x.to)}</tr>`; }).join("")
+     : `<tr><td colspan="7" style="text-align:left;color:var(--mute)">Zatím žádné vyúčtování.</td></tr>`);
+  const tar = [...(E.tariffs||[])].sort((a,b)=>b.from.localeCompare(a.from));
+  $("elTr").innerHTML = `<tr><th>Platný od</th><th>Cena kWh</th><th>Cena NT</th><th>Stálé platby / měsíc</th>${adm?"<th></th>":""}</tr>` +
+    (tar.length ? tar.map(x=>`<tr><td>${new Date(x.from).toLocaleDateString("cs-CZ")}</td><td>${num(x.kwh,2)} Kč</td><td>${x.kwhNT!=null?num(x.kwhNT,2)+" Kč":"—"}</td><td>${x.monthly!=null?fmt(x.monthly):"—"}</td>${rm("tariffs",x.from)}</tr>`).join("")
+     : `<tr><td colspan="5" style="text-align:left;color:var(--mute)">Zatím žádný tarif. Bez něj se nepočítá cena.</td></tr>`);
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>elDelete(b.dataset.del,b.dataset.id));
+  $("elSub").textContent = rd.length ? "Poslední stav k " + new Date(rd[rd.length-1].date).toLocaleDateString("cs-CZ",{day:"numeric",month:"long",year:"numeric"}) : "Zatím bez dat";
+  if (rd.length < 2) {
+    $("elK").innerHTML = `<div class="card" style="grid-column:1/-1">Pro grafy jsou potřeba aspoň dva stavy elektroměru a tarif. Klikni nahoře na <b>Přidat údaje</b>, zadej heslo a vlož stav, tarif a případně vyúčtování.</div>`;
+    $("elNote").textContent = ""; return;
+  }
+  // KPI
+  const last = rd[rd.length-1], endT = Date.parse(last.date), y = new Date(endT).getUTCFullYear(), ed = new Date(endT);
+  const sum = (from,to) => C.days.filter(x=>x.t >= from && x.t < to).reduce((s,x)=>({kwh:s.kwh+x.kwh,cost:s.cost+x.cost,n:s.n+1}),{kwh:0,cost:0,n:0});
+  const ytd = sum(Date.UTC(y,0,1),endT), prev = sum(Date.UTC(y-1,0,1),Date.UTC(y-1,ed.getUTCMonth(),ed.getUTCDate())), l30 = sum(endT-30*864e5,endT), hasCost = C.days.some(x=>x.hasCost);
+  const both = (o) => num(o.kwh,0)+" kWh" + (hasCost ? " / "+fmt(o.cost) : "");
+  let k = kp("Poslední stav",num(last.v,0)+" kWh"+(last.nt!=null?" / NT "+num(last.nt,0):"")) + kp("Posledních 30 dní",both(l30)) + kp("Letos ("+y+")",both(ytd));
+  if (prev.n > 0) { const dk = ytd.kwh && prev.kwh ? (ytd.kwh/prev.kwh-1)*100 : null, dc = hasCost && prev.cost ? (ytd.cost/prev.cost-1)*100 : null;
+    k += kp("Loni stejné období",both(prev)) + (dk!=null ? kp("Změna proti loňsku",(dk>=0?"+":"")+num(dk,1)+" % spotřeba"+(dc!=null?", "+(dc>=0?"+":"")+num(dc,1)+" % cena":""),cls(-dk)) : ""); }
+  if (hasCost && ytd.kwh) k += kp("Průměrná cena letos",num(ytd.cost/ytd.kwh,2)+" Kč / kWh");
+  $("elK").innerHTML = k;
+  // graf
+  const cost = EL.metric === "cost", ms = Object.entries(C.mon).sort((a,b)=>a[0].localeCompare(b[0]));
+  const val = m => cost ? (m.hasCost ? m.cost : null) : m.kwh, fv = v => cost ? fmt(v) : num(v,0)+" kWh", part = m => m.days < dim(m.y,m.m);
+  const pal = ["#c9a227","#2a8c82","#5b5fa8","#c0623f","#8a97a6"];
+  let labels, ds;
+  if (EL.view === "years") {
+    const ys = [...new Set(ms.map(([_,m])=>m.y))].sort(); labels = MN;
+    ds = ys.map((yy,i)=>{ const data = Array(12).fill(null), partial = Array(12).fill(false);
+      ms.forEach(([_,m])=>{ if (m.y === yy) { data[m.m] = val(m); partial[m.m] = part(m); } });
+      return { label:String(yy), data, partial, backgroundColor: pal[Math.min(ys.length-1-i,pal.length-1)], borderRadius:4 }; });
+  } else {
+    labels = ms.map(([key])=>key.slice(5)+"/"+key.slice(2,4));
+    ds = [{ label: cost ? "Cena" : "Spotřeba", data: ms.map(([_,m])=>val(m)), partial: ms.map(([_,m])=>part(m)), backgroundColor: pal[0], borderRadius:4 }];
+  }
+  elChart = new Chart($("elChart"),{ type:"bar", data:{labels,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      scales:{x:{grid:{display:false}},y:{grid:{color:V("--line")},border:{display:false},title:{display:true,text:cost?"Kč":"kWh"},ticks:{callback:v=>num(v,0)}}},
+      plugins:{legend:{display:EL.view==="years",position:"bottom"},tooltip:{callbacks:{label:c=>c.parsed.y==null?null:`${c.dataset.label}: ${fv(c.parsed.y)}${c.dataset.partial[c.dataIndex]?" (částečný měsíc)":""}`}}}}});
+  $("elNote").textContent = (cost && !hasCost ? "Pro zobrazení ceny přidej tarif. " : "") + "Měsíce se dopočítávají z rozdílů stavů elektroměru po dnech, přesnost závisí na tom, jak často stavy zadáváš. První a poslední měsíc mohou být jen částečné.";
+}
+async function saveData(N,out){
+  N._rev = new Date().toISOString(); delete N._local; DATA = N; try { localStorage.setItem("inv_override",JSON.stringify(N)); } catch(e){}
+  render(P);
+  const msg = "✓ Uloženo v tomto prohlížeči."; out.textContent = msg;
+  if (hasTok()) { out.textContent = msg + " Ukládám do GitHubu…";
+    try { await ghSave(JSON.stringify(N,null,1),await tokLoad()); out.textContent = msg + " ✓ Uloženo do GitHubu, web se aktualizuje asi za minutu."; }
+    catch(e){ out.textContent = msg + " ✗ GitHub: " + (e.message || "chyba") + ". Změny jsou jen v tomto prohlížeči."; }
+  } else out.textContent = msg + " Do GitHubu se neukládá (chybí token), vidíš to jen v tomto prohlížeči.";
+}
+function elClone(){ const N = JSON.parse(JSON.stringify(DATA)); N.electricity = N.electricity || {}; ["readings","tariffs","statements"].forEach(k=>N.electricity[k] = N.electricity[k] || []); return N; }
+function elDelete(kind,id){
+  const N = elClone(), key = { readings:r=>r.date, tariffs:t=>t.from, statements:x=>x.from+"|"+x.to }[kind];
+  N.electricity[kind] = N.electricity[kind].filter(x=>key(x) !== id); saveData(N,$("elMsg"));
+}
+function elForm(){
+  const today = iso(Date.now()), L = (l,i) => `<label>${l}${i}</label>`, n_ = (id,l) => L(l,`<input type="number" step="0.01" id="${id}">`), d_ = (id,l,v) => L(l,`<input type="date" id="${id}" value="${v===undefined?today:v}">`);
+  return `<button class="x" onclick="$('dlg').close()">Zavřít</button><h2>Elektřina: přidat údaje</h2>
+  <h3 class="h3">Stav elektroměru</h3><div class="ctl">${d_("e_rd","Datum")}${n_("e_rv","Stav VT / celkem (kWh)")}${n_("e_rn","Stav NT (kWh, volitelné)")}</div><button class="btn" id="e_addR">Přidat stav</button>
+  <h3 class="h3">Tarif</h3><div class="ctl">${d_("e_td","Platný od")}${n_("e_tk","Cena VT / jednotarif (Kč/kWh)")}${n_("e_tn","Cena NT (Kč/kWh, volitelné)")}${n_("e_tm","Stálé platby (Kč/měsíc)")}</div><button class="btn" id="e_addT">Přidat tarif</button>
+  <h3 class="h3">Vyúčtování</h3><div class="ctl">${d_("e_sf","Období od","")}${d_("e_st","Období do")}${n_("e_sk","Spotřeba (kWh)")}${n_("e_sc","Vyúčtováno (Kč)")}${n_("e_sp","Zaplacené zálohy (Kč)")}${n_("e_sv","Stav elektroměru na konci (volitelné)")}</div><button class="btn" id="e_addS">Přidat vyúčtování</button>
+  <p class="hint" id="elOut"></p><p class="hint">Ceny zadávej včetně DPH a všech složek (silová elektřina, distribuce, daň).</p>`;
+}
+function elBind(){
+  const v = id => { const x = $(id); return x && x.value !== "" ? x.value : null; }, n = id => { const x = v(id); return x == null ? null : +x; }, out = () => $("elOut");
+  $("e_addR").onclick = () => { const d = v("e_rd"), val = n("e_rv"); if (!d || val == null) { out().textContent = "Doplň datum a stav."; return; }
+    const N = elClone(), o = { date:d, v:val }, nt = n("e_rn"); if (nt != null) o.nt = nt;
+    N.electricity.readings = N.electricity.readings.filter(r=>r.date !== d).concat([o]).sort((a,b)=>a.date.localeCompare(b.date)); saveData(N,out()); };
+  $("e_addT").onclick = () => { const d = v("e_td"), k = n("e_tk"); if (!d || k == null) { out().textContent = "Doplň datum a cenu za kWh."; return; }
+    const N = elClone(), o = { from:d, kwh:k, monthly:n("e_tm") || 0 }, nt = n("e_tn"); if (nt != null) o.kwhNT = nt;
+    N.electricity.tariffs = N.electricity.tariffs.filter(t=>t.from !== d).concat([o]).sort((a,b)=>a.from.localeCompare(b.from)); saveData(N,out()); };
+  $("e_addS").onclick = () => { const f = v("e_sf"), t = v("e_st"), kwh = n("e_sk"), c = n("e_sc"); if (!f || !t || kwh == null || c == null) { out().textContent = "Doplň období, spotřebu a vyúčtovanou částku."; return; }
+    const N = elClone(), o = { from:f, to:t, kwh, cost:c }, p = n("e_sp"), ev = n("e_sv"); if (p != null) o.paid = p;
+    N.electricity.statements = N.electricity.statements.filter(x=>!(x.from === f && x.to === t)).concat([o]).sort((a,b)=>a.to.localeCompare(b.to));
+    if (ev != null && !N.electricity.readings.some(r=>r.date === t)) N.electricity.readings = N.electricity.readings.concat([{date:t,v:ev}]).sort((a,b)=>a.date.localeCompare(b.date));
+    saveData(N,out()); };
+}
+function openElEdit(){ openDlg(elForm(),elBind); elRender(); }
+function showSec(sec){
+  document.body.classList.toggle("sec-el",sec === "el");
+  document.querySelectorAll("#topnav button").forEach(b=>b.classList.toggle("on",b.dataset.sec === sec));
+  $("h1").textContent = sec === "el" ? "Elektřina" : "Moje investice"; $("eyebrow").textContent = sec === "el" ? "Spotřeba a náklady" : "Osobní přehled";
+  try { sessionStorage.setItem("inv_sec",sec); } catch(e){}
+  window.scrollTo({top:0});
+  requestAnimationFrame(()=>{ [...charts,mktChart,projChart,mortChart,elChart].forEach(c=>c && c.resize && c.resize()); });
 }
 
 async function init(){
@@ -801,6 +954,10 @@ async function init(){
   $("bUpd").onclick = () => isUnlocked() ? openEdit() : askPw();
   document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
   { const h = location.hash.slice(1); let t = ["prehled","trhy","kovy","plany","hypoteka"].includes(h) ? h : null; if (!t) { try { t = sessionStorage.getItem("inv_tab"); } catch(e){} } showTab(t || "prehled"); }
+  $("bElEdit").onclick = () => isUnlocked() ? openElEdit() : askPw(openElEdit);
+  document.querySelectorAll("#topnav button").forEach(b=>b.onclick=()=>showSec(b.dataset.sec));
+  elInit();
+  { let sec = location.hash.slice(1) === "elektrina" ? "el" : null; if (!sec) { try { sec = sessionStorage.getItem("inv_sec"); } catch(e){} } showSec(sec === "el" ? "el" : "inv"); }
   $("pm").value = DATA.gg.monthly; $("tm").value = DATA.tax.dpsMonthly; $("td").value = DATA.tax.dipMonthly; $("te").value = DATA.tax.dipEmployerMonthly||0;
   ["pm","pg"].forEach(id=>$(id).addEventListener("input",projUpdate));
   ["tm","td","te","tr"].forEach(id=>$(id).addEventListener("input",taxUpdate));
