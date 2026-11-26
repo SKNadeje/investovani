@@ -111,6 +111,51 @@ body:not(.sec-el) #sec-el,body:not(.sec-el) .only-el{display:none}
 .h3{margin:18px 0 6px;font-size:1rem;font-family:"Bricolage Grotesque","Instrument Sans",sans-serif}
 .rm{border:0;background:none;color:var(--down);cursor:pointer;font-size:1.05rem;padding:0 6px}
 @media print{:root{--bg:#fff;--card:#fff;--ink:#000;--mute:#555;--line:#ccc;--up:#1e7a52;--down:#b23a2e}main,.noprint{display:none!important}dialog{position:static;border:none;width:100%;max-height:none}}
+
+/* ===== vzhled v3: plná šířka na PC ===== */
+:root{--pad:20px}
+@media(min-width:900px){:root{--pad:32px}main{max-width:none;padding-left:var(--pad);padding-right:var(--pad)}.nav{margin-left:calc(var(--pad)*-1);margin-right:calc(var(--pad)*-1);padding-left:var(--pad);padding-right:var(--pad)}}
+@media(min-width:1100px){
+ :root{--pad:48px}
+ body{font-size:17px}
+ .hero{padding:48px 0 18px}
+ h1{font-size:clamp(3rem,4.2vw,4.4rem)}
+ .tab.on,#sec-el{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px;align-items:start}
+ body.sec-el #sec-el{display:grid}
+ .tab>*,#sec-el>*{min-width:0;margin:0!important}
+ .tab>section.card,#sec-el>section.card{grid-column:span 6}
+ .tab>section.card:hover{box-shadow:var(--sh)}
+ .chart{height:340px}
+ /* Přehled */
+ #tab-prehled>#cards,#tab-prehled>.hint{grid-column:1/-1}
+ #tab-prehled .two{display:contents}
+ #tab-prehled .two>section:nth-child(1){grid-column:span 4;order:1}
+ #tab-prehled .two>section:nth-child(2){grid-column:span 3;order:1}
+ #tab-prehled>#vyvoj{grid-column:span 5;order:1}
+ #tab-prehled>#prehled{grid-column:1/-1;order:2}
+ .cards{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
+ .card.total{display:block}
+ /* ostatní záložky */
+ #tab-trhy>#trhy,#tab-hypoteka>#mortgage,#tab-plany>#vynos{grid-column:1/-1}
+ #tab-plany>#projekce{grid-column:span 7}#tab-plany>#dane{grid-column:span 5}
+ #tab-kovy>#gg,#tab-kovy>#kovy{grid-column:span 6}
+ /* Elektřina */
+ #sec-el>#elK,#sec-el>#elMsg,#sec-el>footer{grid-column:1/-1}
+ #sec-el>#elChartCard{grid-column:1/-1}
+ #sec-el #elChart{max-height:400px}
+ #sec-el>section.card:nth-of-type(2){grid-column:span 5}
+ #sec-el>section.card:nth-of-type(3){grid-column:span 7}
+ #sec-el>section.card:nth-of-type(4){grid-column:1/-1}
+ .kpis{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+ #sec-inv>footer{margin-top:32px}
+ dialog{width:min(1040px,92vw)}
+}
+@media(min-width:1700px){:root{--pad:72px}body{font-size:18px}.chart{height:380px}}
+@media(min-width:1100px) and (max-width:1399px){
+ #tab-prehled .two>section:nth-child(1),#tab-prehled .two>section:nth-child(2){grid-column:span 6}
+ #tab-prehled>#vyvoj{grid-column:1/-1}
+ #tab-plany>#projekce,#tab-plany>#dane{grid-column:span 6}
+}
 </style>
 </head>
 <body>
@@ -852,7 +897,7 @@ function elRender(){
   const ivBy = {}; C.ints.forEach(i=>ivBy[i.to] = i);
   $("elT").innerHTML = `<tr><th>Datum</th><th>Stav</th><th>Spotřeba od minulého</th><th>Dní</th><th>kWh / den</th><th>Cena</th>${adm?"<th></th>":""}</tr>` +
     (rd.length ? [...rd].reverse().map(r=>{ const i = ivBy[r.date], st = num(r.v,1) + (r.nt!=null ? " / "+num(r.nt,1) : "") + (r.note ? ` <span class="hint">(${r.note})</span>` : "");
-      return `<tr><td>${new Date(r.date).toLocaleDateString("cs-CZ")}</td><td>${st}${r.note?` <span class="hint">(${r.note})</span>`:""}</td><td>${i ? (i.bad ? '<span class="down">chybný údaj</span>' : num(i.kwh,1)+" kWh") : "—"}</td><td>${i?i.nd:"—"}</td><td>${i&&!i.bad&&i.nd?num(i.kwh/i.nd,1):"—"}</td><td>${i&&i.hasCost?fmt(i.cost):"—"}</td>${rm("readings",r.date)}</tr>`; }).join("")
+      return `<tr><td>${new Date(r.date).toLocaleDateString("cs-CZ")}</td><td>${st}</td><td>${i ? (i.bad ? '<span class="down">chybný údaj</span>' : num(i.kwh,1)+" kWh") : "—"}</td><td>${i?i.nd:"—"}</td><td>${i&&!i.bad&&i.nd?num(i.kwh/i.nd,1):"—"}</td><td>${i&&i.hasCost?fmt(i.cost):"—"}</td>${rm("readings",r.date)}</tr>`; }).join("")
      : `<tr><td colspan="7" style="text-align:left;color:var(--mute)">Zatím žádné stavy. Klikni nahoře na Přidat údaje.</td></tr>`);
   const stm = [...(E.statements||[])].sort((a,b)=>b.to.localeCompare(a.to));
   $("elS").innerHTML = `<tr><th>Období</th><th>Spotřeba</th><th>Vyúčtováno</th><th>Zálohy</th><th>Přeplatek / nedoplatek</th><th>Kč / kWh</th>${adm?"<th></th>":""}</tr>` +
