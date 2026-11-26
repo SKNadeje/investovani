@@ -203,7 +203,7 @@ body:not(.sec-el) #sec-el,body:not(.sec-el) .only-el{display:none}
     </section>
     <section class="card" style="margin-top:16px"><h2>Stavy elektroměru</h2><div class="wrap"><table id="elT"></table></div></section>
     <section class="card" style="margin-top:16px"><h2>Vyúčtování</h2><div class="wrap"><table id="elS"></table></div></section>
-    <section class="card" style="margin-top:16px"><h2>Tarif</h2><div class="wrap"><table id="elTr"></table></div></section>
+    <section class="card" style="margin-top:16px"><h2>Smlouva a tarif</h2><div class="kpis" id="elMeta"></div><p class="hint" id="elWarn" style="color:var(--down)"></p><div class="wrap"><table id="elTr"></table></div><div id="elInfo"></div></section>
     <p class="hint" id="elMsg"></p>
     <footer>Měsíční spotřeba se dopočítává z rozdílů stavů elektroměru rovnoměrně po dnech, cena je spotřeba krát cena tarifu plus stálé platby. Ceny zadávej včetně DPH a všech složek.</footer>
   </div>
@@ -851,19 +851,24 @@ function elRender(){
   // tabulky
   const ivBy = {}; C.ints.forEach(i=>ivBy[i.to] = i);
   $("elT").innerHTML = `<tr><th>Datum</th><th>Stav</th><th>Spotřeba od minulého</th><th>Dní</th><th>kWh / den</th><th>Cena</th>${adm?"<th></th>":""}</tr>` +
-    (rd.length ? [...rd].reverse().map(r=>{ const i = ivBy[r.date], st = num(r.v,1) + (r.nt!=null ? " / "+num(r.nt,1) : "");
-      return `<tr><td>${new Date(r.date).toLocaleDateString("cs-CZ")}</td><td>${st}</td><td>${i ? (i.bad ? '<span class="down">chybný údaj</span>' : num(i.kwh,1)+" kWh") : "—"}</td><td>${i?i.nd:"—"}</td><td>${i&&!i.bad&&i.nd?num(i.kwh/i.nd,1):"—"}</td><td>${i&&i.hasCost?fmt(i.cost):"—"}</td>${rm("readings",r.date)}</tr>`; }).join("")
+    (rd.length ? [...rd].reverse().map(r=>{ const i = ivBy[r.date], st = num(r.v,1) + (r.nt!=null ? " / "+num(r.nt,1) : "") + (r.note ? ` <span class="hint">(${r.note})</span>` : "");
+      return `<tr><td>${new Date(r.date).toLocaleDateString("cs-CZ")}</td><td>${st}${r.note?` <span class="hint">(${r.note})</span>`:""}</td><td>${i ? (i.bad ? '<span class="down">chybný údaj</span>' : num(i.kwh,1)+" kWh") : "—"}</td><td>${i?i.nd:"—"}</td><td>${i&&!i.bad&&i.nd?num(i.kwh/i.nd,1):"—"}</td><td>${i&&i.hasCost?fmt(i.cost):"—"}</td>${rm("readings",r.date)}</tr>`; }).join("")
      : `<tr><td colspan="7" style="text-align:left;color:var(--mute)">Zatím žádné stavy. Klikni nahoře na Přidat údaje.</td></tr>`);
   const stm = [...(E.statements||[])].sort((a,b)=>b.to.localeCompare(a.to));
   $("elS").innerHTML = `<tr><th>Období</th><th>Spotřeba</th><th>Vyúčtováno</th><th>Zálohy</th><th>Přeplatek / nedoplatek</th><th>Kč / kWh</th>${adm?"<th></th>":""}</tr>` +
     (stm.length ? stm.map(x=>{ const d = x.paid!=null ? x.paid-x.cost : null;
-      return `<tr><td>${new Date(x.from).toLocaleDateString("cs-CZ")} – ${new Date(x.to).toLocaleDateString("cs-CZ")}</td><td>${num(x.kwh,0)} kWh</td><td>${fmt(x.cost)}</td><td>${x.paid!=null?fmt(x.paid):"—"}</td><td class="${d==null?"":cls(d)}">${d==null?"—":sg(d)}</td><td>${x.kwh?num(x.cost/x.kwh,2)+" Kč":"—"}</td>${rm("statements",x.from+"|"+x.to)}</tr>`; }).join("")
+      return `<tr><td>${new Date(x.from).toLocaleDateString("cs-CZ")} – ${new Date(x.to).toLocaleDateString("cs-CZ")}${x.note?`<br><span class="hint">${x.note}</span>`:""}</td><td>${num(x.kwh,0)} kWh</td><td>${fmt(x.cost)}</td><td>${x.paid!=null?fmt(x.paid):"—"}</td><td class="${d==null?"":cls(d)}">${d==null?"—":sg(d)}</td><td>${x.kwh?num(x.cost/x.kwh,2)+" Kč":"—"}</td>${rm("statements",x.from+"|"+x.to)}</tr>`; }).join("")
      : `<tr><td colspan="7" style="text-align:left;color:var(--mute)">Zatím žádné vyúčtování.</td></tr>`);
   const tar = [...(E.tariffs||[])].sort((a,b)=>b.from.localeCompare(a.from));
   $("elTr").innerHTML = `<tr><th>Platný od</th><th>Cena kWh</th><th>Cena NT</th><th>Stálé platby / měsíc</th>${adm?"<th></th>":""}</tr>` +
     (tar.length ? tar.map(x=>`<tr><td>${new Date(x.from).toLocaleDateString("cs-CZ")}</td><td>${num(x.kwh,2)} Kč</td><td>${x.kwhNT!=null?num(x.kwhNT,2)+" Kč":"—"}</td><td>${x.monthly!=null?fmt(x.monthly):"—"}</td>${rm("tariffs",x.from)}</tr>`).join("")
      : `<tr><td colspan="5" style="text-align:left;color:var(--mute)">Zatím žádný tarif. Bez něj se nepočítá cena.</td></tr>`);
+  $("elInfo").innerHTML = (E.info||[]).map(t=>`<p class="hint" style="margin:8px 0 0">${t}</p>`).join("");
   document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>elDelete(b.dataset.del,b.dataset.id));
+  { const M = E.meta || {}, lt = tar[0];
+    $("elMeta").innerHTML = (M.supplier ? kp("Dodavatel",M.supplier) : "") + (M.product ? kp("Produkt",M.product) : "") + (M.sazba ? kp("Sazba / jistič",M.sazba+(M.jistic?", "+M.jistic:"")) : "") +
+      (M.estimate ? kp("Odhad spotřeby ve smlouvě",num(M.estimate,0)+" kWh/rok") : "") + (lt ? kp("Platný tarif",num(lt.kwh,2)+" Kč/kWh + "+fmt(lt.monthly||0)+"/měs.") : "");
+    $("elWarn").textContent = M.fixedUntil && lt && iso(Date.now()) > M.fixedUntil && lt.from <= M.fixedUntil ? "Fixace a sleva podle smlouvy skončily " + new Date(M.fixedUntil).toLocaleDateString("cs-CZ") + ". Pro přesnou cenu od té doby přidej nový tarif (Přidat údaje). " + (M.note||"") : ""; }
   $("elSub").textContent = rd.length ? "Poslední stav k " + new Date(rd[rd.length-1].date).toLocaleDateString("cs-CZ",{day:"numeric",month:"long",year:"numeric"}) : "Zatím bez dat";
   if (rd.length < 2) {
     $("elK").innerHTML = `<div class="card" style="grid-column:1/-1">Pro grafy jsou potřeba aspoň dva stavy elektroměru a tarif. Klikni nahoře na <b>Přidat údaje</b>, zadej heslo a vlož stav, tarif a případně vyúčtování.</div>`;
@@ -899,6 +904,30 @@ function elRender(){
       plugins:{legend:{display:EL.view==="years",position:"bottom"},tooltip:{callbacks:{label:c=>c.parsed.y==null?null:`${c.dataset.label}: ${fv(c.parsed.y)}${c.dataset.partial[c.dataIndex]?" (částečný měsíc)":""}`}}}}});
   $("elNote").textContent = (cost && !hasCost ? "Pro zobrazení ceny přidej tarif. " : "") + "Měsíce se dopočítávají z rozdílů stavů elektroměru po dnech, přesnost závisí na tom, jak často stavy zadáváš. První a poslední měsíc mohou být jen částečné.";
 }
+
+const EL_SEED = {
+  readings:[
+    {date:"2025-02-04",v:136,note:"začátek dodávky"}, {date:"2025-03-14",v:286}, {date:"2025-05-26",v:597,note:"vyúčtování"},
+    {date:"2025-08-31",v:999,note:"odhad při změně ceny"}, {date:"2025-12-31",v:1609,note:"odhad distributora"}, {date:"2026-05-22",v:2301,note:"vyúčtování"}],
+  tariffs:[
+    {from:"2025-02-04",kwh:6.5319,monthly:274.48,note:"Centropol FIXNĚ PRO ZAČÁTEK, sleva 15 %, vč. DPH a POZE"},
+    {from:"2025-09-01",kwh:6.5319,monthly:276.42,note:"vyšší poplatek za nesíťovou infrastrukturu"},
+    {from:"2026-01-01",kwh:5.8994,monthly:281.77,note:"od 2026 bez POZE, nové regulované ceny"}],
+  statements:[
+    {from:"2025-02-04",to:"2025-05-26",kwh:461,cost:4035.48,paid:4160,note:"vrácen přeplatek 125 Kč"},
+    {from:"2025-05-27",to:"2026-05-22",kwh:1704,cost:13993.10,paid:14950,note:"vrácen přeplatek 957 Kč"}],
+  info:[
+    "Dodavatel Centropol Energy, sazba D02d (jednotarif, jen VT), jistič 1×20 A. Produkt FIXNĚ PRO ZAČÁTEK na 1,5 roku platil od 4. 2. 2025 do 3. 8. 2026 (sleva 15 % z ceny silové elektřiny).",
+    "Od 4. 8. 2026 platí produkt FIXNĚ na 1 rok (do 3. 8. 2027), potom BEZ ZÁVAZKU. Nové ceny z ceníku doplň přes Přidat údaje, do té doby se počítá poslední zadaný tarif.",
+    "Ceny jsou včetně DPH 21 % a obsahují silovou elektřinu, distribuci, systémové služby a daň z elektřiny. Stálé platby tvoří měsíční plat dodavatele, jistič a nesíťová infrastruktura. Zálohy: 1 230 Kč měsíčně (2025), od 6/2026 1 390 Kč."]
+};
+function elImportSeed(){
+  const N = elClone(), E = N.electricity;
+  [["readings",r=>r.date],["tariffs",t=>t.from],["statements",x=>x.from+"|"+x.to]].forEach(([k,f])=>{
+    const have = new Set(E[k].map(f)); EL_SEED[k].forEach(x=>{ if (!have.has(f(x))) E[k].push(JSON.parse(JSON.stringify(x))); }); });
+  E.readings.sort((a,b)=>a.date.localeCompare(b.date)); E.tariffs.sort((a,b)=>a.from.localeCompare(b.from)); E.statements.sort((a,b)=>a.to.localeCompare(b.to));
+  E.info = EL_SEED.info; saveData(N,$("elOut"));
+}
 async function saveData(N,out){
   N._rev = new Date().toISOString(); delete N._local; DATA = N; try { localStorage.setItem("inv_override",JSON.stringify(N)); } catch(e){}
   render(P);
@@ -916,18 +945,23 @@ function elDelete(kind,id){
 function elForm(){
   const today = iso(Date.now()), L = (l,i) => `<label>${l}${i}</label>`, n_ = (id,l) => L(l,`<input type="number" step="0.01" id="${id}">`), d_ = (id,l,v) => L(l,`<input type="date" id="${id}" value="${v===undefined?today:v}">`);
   return `<button class="x" onclick="$('dlg').close()">Zavřít</button><h2>Elektřina: přidat údaje</h2>
-  <h3 class="h3">Stav elektroměru</h3><div class="ctl">${d_("e_rd","Datum")}${n_("e_rv","Stav VT / celkem (kWh)")}${n_("e_rn","Stav NT (kWh, volitelné)")}</div><button class="btn" id="e_addR">Přidat stav</button>
-  <h3 class="h3">Tarif</h3><div class="ctl">${d_("e_td","Platný od")}${n_("e_tk","Cena VT / jednotarif (Kč/kWh)")}${n_("e_tn","Cena NT (Kč/kWh, volitelné)")}${n_("e_tm","Stálé platby (Kč/měsíc)")}</div><button class="btn" id="e_addT">Přidat tarif</button>
+  <h3 class="h3">Stav elektroměru</h3><p class="hint" style="margin:0 0 6px">Datum je den, kdy jsi stav odečetl (ráno). Spotřeba se počítá od tohoto dne.</p><div class="ctl">${d_("e_rd","Datum")}${n_("e_rv","Stav VT / celkem (kWh)")}${n_("e_rn","Stav NT (kWh, volitelné)")}</div><button class="btn" id="e_addR">Přidat stav</button>
+  <h3 class="h3">Tarif</h3><div class="ctl">${d_("e_td","Platný od")}${n_("e_tk","Cena VT / jednotarif (Kč/kWh)")}${n_("e_tn","Cena NT (Kč/kWh, volitelné)")}${n_("e_tm","Stálé platby (Kč/měsíc)")}</div><details style="margin:8px 0"><summary>Nebo rozpis z vyúčtování (ceny bez DPH, spočítá se samo)</summary><div class="ctl">${n_("e_bs","Silová elektřina (Kč/MWh)")}${n_("e_bd","Sleva (%)")}${n_("e_bdi","Distribuce (Kč/MWh)")}${n_("e_bp","POZE (Kč/MWh)")}${n_("e_bss","Systémové služby (Kč/MWh)")}${n_("e_bt","Daň z elektřiny (Kč/MWh)")}${n_("e_bpl","Stálý plat (Kč/měsíc)")}${n_("e_bj","Jistič (Kč/měsíc)")}${n_("e_bn","Nesíťová infrastruktura (Kč/měsíc)")}${L("DPH (%)",`<input type="number" step="0.1" id="e_bv" value="21">`)}</div></details><button class="btn" id="e_addT">Přidat tarif</button>
   <h3 class="h3">Vyúčtování</h3><div class="ctl">${d_("e_sf","Období od","")}${d_("e_st","Období do")}${n_("e_sk","Spotřeba (kWh)")}${n_("e_sc","Vyúčtováno (Kč)")}${n_("e_sp","Zaplacené zálohy (Kč)")}${n_("e_sv","Stav elektroměru na konci (volitelné)")}</div><button class="btn" id="e_addS">Přidat vyúčtování</button>
-  <p class="hint" id="elOut"></p><p class="hint">Ceny zadávej včetně DPH a všech složek (silová elektřina, distribuce, daň).</p>`;
+  <p class="hint" id="elOut"></p><p class="hint">Ceny zadávej včetně DPH a všech složek (silová elektřina, distribuce, daň).</p>${(DATA.electricity&&(DATA.electricity.readings||[]).some(r=>r.date==="2025-02-04"))?"":`<h3 class="h3">Import</h3><button class="btn" id="e_seed">Načíst vyúčtování Centropol 2025–2026</button><p class="hint">Vloží stavy elektroměru, tarify a obě vyúčtování z PDF, která jsi mi poslal.</p>`}`;
 }
 function elBind(){
+  if ($("e_seed")) $("e_seed").onclick = elImportSeed;
   const v = id => { const x = $(id); return x && x.value !== "" ? x.value : null; }, n = id => { const x = v(id); return x == null ? null : +x; }, out = () => $("elOut");
   $("e_addR").onclick = () => { const d = v("e_rd"), val = n("e_rv"); if (!d || val == null) { out().textContent = "Doplň datum a stav."; return; }
     const N = elClone(), o = { date:d, v:val }, nt = n("e_rn"); if (nt != null) o.nt = nt;
     N.electricity.readings = N.electricity.readings.filter(r=>r.date !== d).concat([o]).sort((a,b)=>a.date.localeCompare(b.date)); saveData(N,out()); };
-  $("e_addT").onclick = () => { const d = v("e_td"), k = n("e_tk"); if (!d || k == null) { out().textContent = "Doplň datum a cenu za kWh."; return; }
-    const N = elClone(), o = { from:d, kwh:k, monthly:n("e_tm") || 0 }, nt = n("e_tn"); if (nt != null) o.kwhNT = nt;
+  $("e_addT").onclick = () => { const d = v("e_td"); let k = n("e_tk"), m = n("e_tm") || 0, parts = null, nt = n("e_tn");
+    if (n("e_bs") != null) { const z = x => n(x) || 0, dph = 1+(n("e_bv") != null ? n("e_bv") : 21)/100;
+      k = Math.round((n("e_bs")*(1-z("e_bd")/100) + z("e_bdi") + z("e_bp") + z("e_bss") + z("e_bt"))/1000*dph*1e4)/1e4; m = Math.round((z("e_bpl")+z("e_bj")+z("e_bn"))*dph*100)/100;
+      parts = { silova:n("e_bs"), sleva:z("e_bd"), dist:z("e_bdi"), poze:z("e_bp"), sys:z("e_bss"), dan:z("e_bt"), plat:z("e_bpl"), jistic:z("e_bj"), infra:z("e_bn"), dph:n("e_bv") != null ? n("e_bv") : 21 }; }
+    if (!d || k == null) { out().textContent = "Doplň datum a cenu za kWh (nebo rozpis)."; return; }
+    const N = elClone(), o = { from:d, kwh:k, monthly:m }; if (nt != null) o.kwhNT = nt; if (parts) o.parts = parts;
     N.electricity.tariffs = N.electricity.tariffs.filter(t=>t.from !== d).concat([o]).sort((a,b)=>a.from.localeCompare(b.from)); saveData(N,out()); };
   $("e_addS").onclick = () => { const f = v("e_sf"), t = v("e_st"), kwh = n("e_sk"), c = n("e_sc"); if (!f || !t || kwh == null || c == null) { out().textContent = "Doplň období, spotřebu a vyúčtovanou částku."; return; }
     const N = elClone(), o = { from:f, to:t, kwh, cost:c }, p = n("e_sp"), ev = n("e_sv"); if (p != null) o.paid = p;
