@@ -896,50 +896,103 @@
   "propertyArea": 82,
   "propertyNote": "byt po kompletní rekonstrukci, 82 m², Trutnov – Krýblice"
  },
- "_rev": "2026-11-09T19:55:02.369Z",
+ "_rev": "2026-11-26T05:28:18.225Z",
  "electricity": {
+  "meta": {
+   "supplier": "Centropol Energy",
+   "product": "Fixně pro začátek na 1,5 roku (sleva 15 %)",
+   "sazba": "D02d (jednotarif)",
+   "jistic": "1x20 A",
+   "estimate": 1200,
+   "fixedUntil": "2026-08-03",
+   "note": "Závazek na 18 měsíců od 4. 2. 2025 skončil 3. 8. 2026. Dál platí nový ceník dodavatele, přidej ho jako nový tarif."
+  },
   "readings": [
    {
     "date": "2025-02-04",
     "v": 136,
-    "nt": 0
+    "note": "začátek dodávek"
    },
    {
-    "date": "2025-03-14",
+    "date": "2025-03-15",
     "v": 286,
-    "nt": 0
+    "note": "dělení období ve vyúčtování"
    },
    {
-    "date": "2025-05-26",
+    "date": "2025-05-27",
     "v": 597,
-    "nt": 0
+    "note": "odečet k vyúčtování"
    },
    {
-    "date": "2025-08-31",
+    "date": "2025-09-01",
     "v": 999,
-    "nt": 0
+    "note": "dělení, odhad dodavatele"
    },
    {
-    "date": "2025-12-31",
+    "date": "2026-01-01",
     "v": 1609,
-    "nt": 0
+    "note": "odhad dodavatele"
    },
    {
-    "date": "2026-05-22",
+    "date": "2026-05-23",
     "v": 2301,
-    "nt": 0
+    "note": "odečet k vyúčtování"
    }
   ],
   "tariffs": [
    {
     "from": "2025-02-04",
-    "kwh": 4.31,
-    "monthly": 274.61
+    "kwh": 6.5319,
+    "monthly": 274.48,
+    "note": "ceny z vyúčtování",
+    "parts": {
+     "silova": 3064,
+     "sleva": 15,
+     "dist": 2099.63,
+     "poze": 495,
+     "sys": 170.92,
+     "dan": 28.3,
+     "plat": 118,
+     "jistic": 98,
+     "infra": 10.84,
+     "dph": 21
+    }
+   },
+   {
+    "from": "2025-09-01",
+    "kwh": 6.5319,
+    "monthly": 276.42,
+    "note": "vyšší poplatek za nesíťovou infrastrukturu",
+    "parts": {
+     "silova": 3064,
+     "sleva": 15,
+     "dist": 2099.63,
+     "poze": 495,
+     "sys": 170.92,
+     "dan": 28.3,
+     "plat": 118,
+     "jistic": 98,
+     "infra": 12.45,
+     "dph": 21
+    }
    },
    {
     "from": "2026-01-01",
-    "kwh": 5.38,
-    "monthly": 297.34
+    "kwh": 5.8994,
+    "monthly": 281.77,
+    "note": "POZE nově bez platby, nižší distribuce",
+    "parts": {
+     "silova": 3064,
+     "sleva": 15,
+     "dist": 2078.58,
+     "poze": 0,
+     "sys": 164.24,
+     "dan": 28.3,
+     "plat": 118,
+     "jistic": 102,
+     "infra": 12.87,
+     "dph": 21
+    }
    }
   ],
   "statements": [
@@ -948,14 +1001,16 @@
     "to": "2025-05-26",
     "kwh": 461,
     "cost": 4035.48,
-    "paid": 4160
+    "paid": 4160,
+    "note": "přeplatek 125 Kč"
    },
    {
     "from": "2025-05-27",
     "to": "2026-05-22",
     "kwh": 1704,
     "cost": 13993.1,
-    "paid": 14950
+    "paid": 14950,
+    "note": "přeplatek 957 Kč"
    }
   ]
  }
