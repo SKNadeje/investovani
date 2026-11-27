@@ -105,8 +105,10 @@ section.card,.cards>.card{animation:rise .5s ease both}
 .nav button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 @media(prefers-color-scheme:dark){.nav button.on{background:var(--gold);color:#10243a;border-color:var(--gold)}}
 .tab{display:none}.tab.on{display:block}
-body.sec-el #sec-inv,body.sec-el .only-inv{display:none}
+body.sec-el #sec-inv,body.sec-nak #sec-inv,body.sec-el .only-inv,body.sec-nak .only-inv{display:none}
 body:not(.sec-el) #sec-el,body:not(.sec-el) .only-el{display:none}
+body:not(.sec-nak) #sec-nak,body:not(.sec-nak) .only-nak{display:none}
+#sec-nak.empty>section,#sec-nak.empty>footer{display:none}
 .bigseg{margin:0 0 14px}.bigseg button{font-size:.95rem;padding:8px 22px}
 .h3{margin:18px 0 6px;font-size:1rem;font-family:"Bricolage Grotesque","Instrument Sans",sans-serif}
 .rm{border:0;background:none;color:var(--down);cursor:pointer;font-size:1.05rem;padding:0 6px}
@@ -120,10 +122,10 @@ body:not(.sec-el) #sec-el,body:not(.sec-el) .only-el{display:none}
  body{font-size:17px}
  .hero{padding:48px 0 18px}
  h1{font-size:clamp(3rem,4.2vw,4.4rem)}
- .tab.on,#sec-el{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px;align-items:start}
- body.sec-el #sec-el{display:grid}
- .tab>*,#sec-el>*{min-width:0;margin:0!important}
- .tab>section.card,#sec-el>section.card{grid-column:span 6}
+ .tab.on,#sec-el,#sec-nak{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px;align-items:start}
+ body.sec-el #sec-el,body.sec-nak #sec-nak{display:grid}
+ .tab>*,#sec-el>*,#sec-nak>*{min-width:0;margin:0!important}
+ .tab>section.card,#sec-el>section.card,#sec-nak>section.card{grid-column:span 6}
  .tab>section.card:hover{box-shadow:var(--sh)}
  .chart{height:340px}
  /* Přehled */
@@ -147,6 +149,9 @@ body:not(.sec-el) #sec-el,body:not(.sec-el) .only-el{display:none}
  #sec-el>#elStav{grid-column:span 5}
  #sec-el>#elVyu{grid-column:span 7}
  #sec-el>#elSml{grid-column:1/-1}
+ #sec-nak>#nkK,#sec-nak>#nkMsg,#sec-nak>footer,#sec-nak>#nkListCard{grid-column:1/-1}
+ #sec-nak>#nkChartCard{grid-column:span 7}#sec-nak>#nkCatCard{grid-column:span 5}
+ #sec-nak>#nkYearCard{grid-column:span 6}#sec-nak>#nkRecCard{grid-column:span 6}
  .kpis{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
  #sec-inv>footer{margin-top:32px}
  dialog{width:min(1040px,92vw)}
@@ -227,14 +232,16 @@ footer{font-family:var(--serif);font-style:italic;font-size:.88rem;border-top:1p
 
 .upd{font-size:.74rem;color:var(--mute);margin-top:6px;letter-spacing:.01em}
 .upd.dep{margin-top:2px;color:var(--ink)}.upd.dep b{color:var(--up);font-weight:600}
+#nkT th:nth-child(2),#nkT td:nth-child(2),#nkT th:nth-child(3),#nkT td:nth-child(3),#nkRT th:nth-child(2),#nkRT td:nth-child(2){text-align:left}
+#nkT td:last-child,#nkRT td:last-child{text-align:right}
 </style>
 </head>
 <body>
 <main>
   <header class="hero">
     <div class="hero-top">
-      <div><div class="seg bigseg" id="topnav"><button data-sec="inv" class="on">Investice</button><button data-sec="el">Elektřina</button></div><div class="eyebrow" id="eyebrow">Osobní přehled</div><h1 id="h1">Moje investice</h1><p class="sub only-inv" id="updated"></p><p class="status only-inv" id="status"></p><p class="sub only-el" id="elSub"></p></div>
-      <div class="acts"><button class="btn only-inv" id="bRep">Měsíční report</button><button class="btn only-inv" id="bUpd">🔒 Úpravy dat</button><button class="btn only-el" id="bElEdit">🔒 Přidat údaje</button></div>
+      <div><div class="seg bigseg" id="topnav"><button data-sec="inv" class="on">Investice</button><button data-sec="el">Elektřina</button><button data-sec="nak">Náklady</button></div><div class="eyebrow" id="eyebrow">Osobní přehled</div><h1 id="h1">Moje investice</h1><p class="sub only-inv" id="updated"></p><p class="status only-inv" id="status"></p><p class="sub only-el" id="elSub"></p><p class="sub only-nak" id="nkSub"></p></div>
+      <div class="acts"><button class="btn only-inv" id="bRep">Měsíční report</button><button class="btn only-inv" id="bUpd">🔒 Úpravy dat</button><button class="btn only-nak" id="bNakEdit">🔒 Přidat výdaj</button><button class="btn only-el" id="bElEdit">🔒 Přidat údaje</button></div>
     </div>
   </header>
   <div id="sec-inv">
@@ -323,6 +330,16 @@ footer{font-family:var(--serif);font-style:italic;font-size:.88rem;border-top:1p
     <section class="card" id="elSml" style="margin-top:16px"><h2>Smlouva a tarif</h2><div class="kpis" id="elMeta"></div><p class="hint" id="elWarn" style="color:var(--down)"></p><div class="wrap"><table id="elTr"></table></div><div id="elInfo"></div></section>
     <p class="hint" id="elMsg"></p>
     <footer>Měsíční spotřeba se dopočítává z rozdílů stavů elektroměru rovnoměrně po dnech, cena je spotřeba krát cena tarifu plus stálé platby. Ceny zadávej včetně DPH a všech složek.</footer>
+  </div>
+  <div id="sec-nak">
+    <div class="kpis" id="nkK"></div>
+    <section class="card" id="nkChartCard" style="margin-top:16px"><h2>Výdaje po měsících</h2><div style="display:flex;flex-wrap:wrap;gap:8px"><div class="seg" id="nkYear"></div><div class="seg" id="nkView"></div></div><div class="chart" style="height:340px"><canvas id="nkChart"></canvas></div><p class="hint" id="nkNote"></p></section>
+    <section class="card" id="nkCatCard" style="margin-top:16px"><h2>Podle kategorií</h2><div class="chart" style="height:230px"><canvas id="nkPie"></canvas></div><div class="wrap" style="margin-top:12px"><table id="nkCatT"></table></div></section>
+    <section class="card" id="nkYearCard" style="margin-top:16px"><h2>Roční přehled</h2><div class="wrap"><table id="nkYT"></table></div></section>
+    <section class="card" id="nkRecCard" style="margin-top:16px"><h2>Pravidelné platby</h2><div class="wrap"><table id="nkRT"></table></div><p class="hint" id="nkRn"></p></section>
+    <section class="card" id="nkListCard" style="margin-top:16px"><h2>Výdaje</h2><div class="ctl" id="nkF"></div><div class="wrap"><table id="nkT"></table></div><p class="hint" id="nkTn"></p></section>
+    <p class="hint" id="nkMsg"></p>
+    <footer>Výdaje a pravidelné platby zadáváš pod heslem tlačítkem Přidat výdaj. Pravidelné platby se do každého měsíce započítávají automaticky. Data se ukládají do data.json stejně jako investice.</footer>
   </div>
 </main>
 <dialog id="dlg"><button class="x" id="dx">Zavřít</button><div id="dbody"></div></dialog>
@@ -556,7 +573,7 @@ function extras(){
   EX = { costNow: gold.deposits+silv.deposits, valNow: gold.value+silv.value, total: ITEMS.filter(a=>!a.exclude).reduce((t,a)=>t+a.value,0) };
   if (HIST && HIST.daily && HIST.daily.length) metalsHistory(gold,silv);
   else $("mhWrap").innerHTML = `<p class="hint">Historické ceny zatím nejsou. V GitHubu otevři Actions → Deploy Pages → Run workflow. Po doběhnutí uvidíš v souhrnu běhu, který zdroj cen funguje. Soubor <code>history.json</code> se pak objeví i v repozitáři.</p>`;
-  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); mortUpdate(); mktRender(); elRender();
+  yieldBlock(); projUpdate(); taxUpdate(); totalChart(); mortUpdate(); mktRender(); elRender(); nakRender();
 }
 
 function metalsHistory(gold,silv){
@@ -1105,13 +1122,139 @@ function elBind(){
     saveData(N,out()); };
 }
 function openElEdit(){ openDlg(elForm(),elBind); elRender(); }
+/* ============ Náklady ============ */
+const NK_CATS = ["Bydlení","Energie","Jídlo","Doprava","Auto","Zdraví","Zábava","Oblečení","Děti","Pojištění","Předplatné","Dovolená","Dárky","Ostatní"];
+const NK_COL = ["#a67f2e","#2a8c82","#5b5fa8","#c0563a","#4f8f5b","#8a6bb5","#d19a3d","#3f7fb0","#b8607a","#6d7b88","#7aa05a","#c27c5a","#9a8f3d","#8d9aa6"];
+const NK_M = ["led","úno","bře","dub","kvě","čvn","čvc","srp","zář","říj","lis","pro"];
+let nkCharts = []; const NK = { year:null, month:"", cat:"", view:"cat" };
+const nkToday = () => { const d = new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); };
+const nkId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const nkCol = c => { const i = NK_CATS.indexOf(c); if (i >= 0) return NK_COL[i]; let h = 0; for (const ch of String(c)) h = (h*31+ch.charCodeAt(0))>>>0; return NK_COL[h%NK_COL.length]; };
+const nkDate = d => new Date(d+"T00:00:00").toLocaleDateString("cs-CZ",{day:"numeric",month:"numeric",year:"numeric"});
+const nkMonthName = k => { const [y,m] = k.split("-"); return new Date(+y,+m-1,1).toLocaleDateString("cs-CZ",{month:"long",year:"numeric"}); };
+function nkClone(){ const N = JSON.parse(JSON.stringify(DATA)); N.expenses = N.expenses || {}; N.expenses.items = N.expenses.items || []; N.expenses.recurring = N.expenses.recurring || []; return N; }
+function nkAll(){
+  const X = DATA.expenses || {}, out = (X.items||[]).filter(x=>x && x.date && x.amount!=null).map(x=>({ ...x, cat:x.cat||"Ostatní" })), now = new Date(), cy = now.getFullYear(), cmi = now.getMonth();
+  (X.recurring||[]).forEach(r=>{ if (!r.from || r.amount==null) return; const s = new Date(r.from+"T00:00:00"), sd = s.getDate(); let y = s.getFullYear(), m = s.getMonth();
+    const end = r.to ? new Date(r.to+"T00:00:00") : null;
+    while (y < cy || (y === cy && m <= cmi)) { const day = Math.min(sd, dim(y,m)), ds = y+"-"+pad2(m+1)+"-"+pad2(day);
+      if (end && ds > r.to) break; out.push({ id:"r_"+r.id+"_"+ds, date:ds, amount:+r.amount, cat:r.cat||"Ostatní", note:r.name||"", rec:r.id }); m++; if (m > 11) { m = 0; y++; } } });
+  return out;
+}
+function nakRender(){
+  if (!$("nkK")) return;
+  nkCharts.forEach(c=>c.destroy()); nkCharts = [];
+  const all = nkAll(), adm = isUnlocked(), X = DATA.expenses || {}, budget = +X.budget || 0, now = new Date(), cy = now.getFullYear(), cm = cy+"-"+pad2(now.getMonth()+1);
+  $("sec-nak").classList.toggle("empty",!all.length);
+  document.querySelectorAll("#sec-nak [data-adm]").forEach(e=>e.style.display = adm ? "" : "none");
+  if (!all.length) { $("nkK").innerHTML = `<div class="card" style="grid-column:1/-1">Zatím tu nejsou žádné výdaje. Klikni nahoře na <b>Přidat výdaj</b> (heslo), zadej první výdaj nebo pravidelnou platbu a objeví se tabulky a grafy.</div>`; $("nkSub").textContent = ""; return; }
+  const years = [...new Set(all.map(x=>+x.date.slice(0,4)))].sort((a,b)=>b-a);
+  if (NK.year == null || !years.includes(NK.year)) NK.year = years.includes(cy) ? cy : years[0];
+  const Y = NK.year, first = all.reduce((m,x)=>x.date<m?x.date:m,all[0].date).slice(0,7);
+  const nm = y => { const s = (+first.slice(0,4) === y) ? +first.slice(5,7) : 1, e = y === cy ? now.getMonth()+1 : 12; return Math.max(1,e-s+1); };
+  const sum = a => a.reduce((s,x)=>s+x.amount,0), inY = y => all.filter(x=>+x.date.slice(0,4) === y);
+  const byM = {}; all.forEach(x=>{ const k = x.date.slice(0,7); byM[k] = (byM[k]||0)+x.amount; });
+  const catTot = {}; all.forEach(x=>catTot[x.cat] = (catTot[x.cat]||0)+x.amount);
+  const cats = Object.keys(catTot).sort((a,b)=>catTot[b]-catTot[a]);
+  const lastRec = all.filter(x=>!x.rec).reduce((m,x)=>x.date>m?x.date:m,""), last = new Date(now.getFullYear(),now.getMonth()-1,1), lm = last.getFullYear()+"-"+pad2(last.getMonth()+1);
+  $("nkSub").textContent = lastRec ? "Poslední zadaný výdaj: "+nkDate(lastRec) : "";
+  // KPI
+  const cmT = byM[cm]||0, lmT = byM[lm]||0, d = lmT ? (cmT/lmT-1)*100 : null, yT = sum(inY(Y)), yAvg = yT/nm(Y);
+  const s12 = Object.keys(byM).filter(k=>k > (cy-1)+"-"+pad2(now.getMonth()+1) && k <= cm), n12 = Math.max(1,Math.min(12,(now.getFullYear()-+first.slice(0,4))*12+now.getMonth()-(+first.slice(5,7)-1)+1));
+  const topC = Object.entries(inY(Y).reduce((o,x)=>(o[x.cat]=(o[x.cat]||0)+x.amount,o),{})).sort((a,b)=>b[1]-a[1])[0];
+  const kc = (l,v,sub) => `<div class="kpi"><span>${l}</span><b>${v}</b>${sub?`<div class="hint" style="margin:3px 0 0">${sub}</div>`:""}</div>`;
+  const rem = budget-cmT, bp = budget ? Math.min(100,cmT/budget*100) : 0;
+  $("nkK").innerHTML = kc("Tento měsíc",fmt(cmT),lmT ? `<span class="${d>0?"down":"up"}">${d>=0?"+":"−"}${num(Math.abs(d),0)} %</span> oproti minulému (${fmt(lmT)})` : "minulý měsíc bez záznamů")
+    + (budget ? `<div class="kpi"><span>Rozpočet na měsíc</span><b>${fmt(cmT)} <small style="font-weight:400;color:var(--mute)">/ ${fmt(budget)}</small></b><div class="bar" style="margin:8px 0 4px"><i style="width:${bp}%;${rem<0?"background:var(--down)":""}"></i></div><div class="hint" style="margin:0"><span class="${rem<0?"down":"up"}">${rem<0?"překročeno o "+fmt(-rem):"zbývá "+fmt(rem)}</span></div></div>` : kc("Rozpočet na měsíc","—","nastavíš pod heslem"))
+    + kc("Průměr za měsíc",fmt(sum(s12.map(k=>({amount:byM[k]})))/n12),"posledních "+n12+" měs.")
+    + kc("Rok "+Y,fmt(yT),"Ø "+fmt(yAvg)+" měsíčně")
+    + kc("Největší kategorie "+Y,topC ? topC[0] : "—",topC ? fmt(topC[1])+" ("+num(topC[1]/yT*100,0)+" %)" : "");
+  // přepínače
+  $("nkYear").innerHTML = years.map(y=>`<button data-k="${y}" class="${y===Y?"on":""}">${y}</button>`).join("");
+  $("nkView").innerHTML = [["cat","Podle kategorií"],["years","Porovnání let"]].map(([k,l])=>`<button data-k="${k}" class="${k===NK.view?"on":""}">${l}</button>`).join("");
+  $("nkYear").querySelectorAll("button").forEach(b=>b.onclick=()=>{ NK.year = +b.dataset.k; NK.month = ""; nakRender(); });
+  $("nkView").querySelectorAll("button").forEach(b=>b.onclick=()=>{ NK.view = b.dataset.k; nakRender(); });
+  // graf měsíců
+  const mk2 = cfg => { const c = new Chart($("nkChart"),cfg); nkCharts.push(c); };
+  const fm = c => c.dataset.label+": "+fmt(c.parsed.y);
+  if (NK.view === "cat") {
+    const ds = cats.map(c=>({ label:c, data:NK_M.map((_,i)=>sum(inY(Y).filter(x=>x.cat===c && +x.date.slice(5,7)===i+1))||null), backgroundColor:nkCol(c), stack:"s", borderWidth:0 }));
+    if (budget) ds.push({ type:"line", label:"Rozpočet", data:NK_M.map(()=>budget), borderColor:V("--ink"), borderDash:[5,4], pointRadius:0, borderWidth:1.5, order:0 });
+    mk2({ type:"bar", data:{labels:NK_M,datasets:ds}, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:"index",intersect:false},
+      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,border:{display:false},ticks:{callback:tick}}},
+      plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:fm,footer:it=>"Celkem: "+fmt(it.filter(i=>i.dataset.type!=="line").reduce((s,i)=>s+(i.parsed.y||0),0))}}} } });
+    $("nkNote").textContent = "Sloupce jsou výdaje v jednotlivých měsících roku "+Y+", barvy značí kategorie."+(budget?" Přerušovaná čára je měsíční rozpočet.":"");
+  } else {
+    const pal = ["#a67f2e","#2a8c82","#5b5fa8","#c0563a","#4f8f5b","#8a6bb5"];
+    const ds = years.slice().reverse().map((y,i)=>({ label:String(y), data:NK_M.map((_,mi)=>{ if (y===cy && mi>now.getMonth()) return null; const v = sum(inY(y).filter(x=>+x.date.slice(5,7)===mi+1)); return v||null; }), borderColor:y===Y?V("--ink"):pal[i%pal.length], backgroundColor:pal[i%pal.length], borderWidth:y===Y?3:1.8, pointRadius:y===Y?4:2.5, tension:.25, spanGaps:true }));
+    mk2({ type:"line", data:{labels:NK_M,datasets:ds}, options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:"index",intersect:false},
+      scales:{x:{grid:{display:false}},y:{border:{display:false},ticks:{callback:tick}}}, plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:fm}}} } });
+    $("nkNote").textContent = "Celkové měsíční výdaje v jednotlivých letech nad sebou. Rok "+Y+" je tmavou čarou.";
+  }
+  // kategorie (rok)
+  const yi = inY(Y), pri = inY(Y-1), ct = {}, cp = {}; yi.forEach(x=>ct[x.cat]=(ct[x.cat]||0)+x.amount); pri.forEach(x=>cp[x.cat]=(cp[x.cat]||0)+x.amount);
+  const cl = Object.keys(ct).sort((a,b)=>ct[b]-ct[a]);
+  { const c = new Chart($("nkPie"),{ type:"doughnut", data:{labels:cl,datasets:[{data:cl.map(k=>ct[k]),backgroundColor:cl.map(nkCol),borderWidth:2,borderColor:V("--card")}]}, options:{ responsive:true, maintainAspectRatio:false, cutout:"64%", plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+": "+fmt(c.parsed)+" ("+num(c.parsed/yT*100,0)+" %)"}}} } }); nkCharts.push(c); }
+  $("nkCatT").innerHTML = `<tr><th>Kategorie</th><th>Celkem ${Y}</th><th>Podíl</th><th>Ø měsíc</th><th>Oproti loni</th></tr>` + cl.map(k=>{ const a = ct[k]/nm(Y), p = pri.length ? (cp[k] ? cp[k]/nm(Y-1) : 0) : null;
+    const ch = p == null ? "—" : p ? `<span class="${a>p?"down":"up"}">${a>=p?"+":"−"}${num(Math.abs(a/p-1)*100,0)} %</span>` : "nové";
+    return `<tr><td><span class="dot" style="display:inline-block;background:${nkCol(k)};margin-right:8px"></span>${k}</td><td>${fmt(ct[k])}</td><td>${num(ct[k]/yT*100,0)} %</td><td>${fmt(a)}</td><td>${ch}</td></tr>`; }).join("");
+  // roční přehled
+  $("nkYT").innerHTML = `<tr><th>Rok</th><th>Celkem</th><th>Ø měsíc</th><th>Nejdražší měsíc</th><th>Největší kategorie</th><th>Oproti předchozímu roku</th></tr>` + years.map(y=>{
+    const a = inY(y), t = sum(a), av = t/nm(y), mm = {}, cc = {}; a.forEach(x=>{ const k = x.date.slice(5,7); mm[k] = (mm[k]||0)+x.amount; cc[x.cat] = (cc[x.cat]||0)+x.amount; });
+    const mx = Object.entries(mm).sort((p,q)=>q[1]-p[1])[0], tc = Object.entries(cc).sort((p,q)=>q[1]-p[1])[0], pv = years.includes(y-1) ? sum(inY(y-1))/nm(y-1) : null;
+    return `<tr><td><b>${y}</b>${y===cy?` <span class="hint">(zatím ${nm(y)} měs.)</span>`:""}</td><td>${fmt(t)}</td><td>${fmt(av)}</td><td>${NK_M[+mx[0]-1]} (${fmt(mx[1])})</td><td>${tc[0]} (${num(tc[1]/t*100,0)} %)</td><td>${pv ? `<span class="${av>pv?"down":"up"}">${av>=pv?"+":"−"}${num(Math.abs(av/pv-1)*100,1)} %</span> <span class="hint">měsíčně</span>` : "—"}</td></tr>`; }).join("");
+  // pravidelné platby
+  const rec = (X.recurring||[]), ro = r => r.to && r.to < nkToday();
+  $("nkRT").innerHTML = rec.length ? `<tr><th>Platba</th><th>Kategorie</th><th>Měsíčně</th><th>Od</th><th>Do</th>${adm?"<th></th>":""}</tr>` + rec.map(r=>`<tr style="${ro(r)?"opacity:.55":""}"><td>${r.name||"—"}</td><td>${r.cat||"Ostatní"}</td><td>${fmt(r.amount)}</td><td>${nkDate(r.from)}</td><td>${r.to?nkDate(r.to):"trvá"}</td>${adm?`<td style="white-space:nowrap"><button class="rm" style="color:var(--mute)" data-nked="rec" data-id="${r.id}" title="Upravit">✎</button><button class="rm" data-nkdel="rec" data-id="${r.id}" title="Smazat">×</button></td>`:""}</tr>`).join("") : `<tr><td style="text-align:left;color:var(--mute)">Zatím žádné.</td></tr>`;
+  const act = rec.filter(r=>!ro(r)); $("nkRn").textContent = act.length ? "Aktivní pravidelné platby dohromady: "+fmt(sum(act))+" měsíčně. Počítají se do každého měsíce automaticky." : "Nájem, pojištění nebo předplatné zadej jednou jako pravidelnou platbu, bude se započítávat každý měsíc.";
+  // seznam výdajů
+  const monthsY = [...new Set(inY(Y).map(x=>x.date.slice(0,7)))].sort().reverse();
+  if (NK.month && !monthsY.includes(NK.month)) NK.month = ""; if (NK.cat && !cl.includes(NK.cat)) NK.cat = "";
+  $("nkF").innerHTML = `<label>Měsíc<select id="nkFm"><option value="">celý rok ${Y}</option>${monthsY.map(m=>`<option value="${m}"${m===NK.month?" selected":""}>${nkMonthName(m)}</option>`).join("")}</select></label><label>Kategorie<select id="nkFc"><option value="">všechny</option>${cl.map(c=>`<option${c===NK.cat?" selected":""}>${c}</option>`).join("")}</select></label>`;
+  $("nkFm").onchange = e => { NK.month = e.target.value; nakRender(); }; $("nkFc").onchange = e => { NK.cat = e.target.value; nakRender(); };
+  const rows = yi.filter(x=>(!NK.month || x.date.startsWith(NK.month)) && (!NK.cat || x.cat === NK.cat)).sort((a,b)=>b.date.localeCompare(a.date) || b.amount-a.amount);
+  $("nkT").innerHTML = `<tr><th>Datum</th><th>Kategorie</th><th>Poznámka</th><th>Částka</th>${adm?"<th></th>":""}</tr>` + (rows.length ? rows.slice(0,300).map(x=>`<tr><td>${nkDate(x.date)}</td><td><span class="dot" style="display:inline-block;background:${nkCol(x.cat)};margin-right:8px"></span>${x.cat}</td><td style="text-align:left">${x.note||""}${x.rec?` <span class="hint">pravidelná</span>`:""}</td><td>${fmt(x.amount)}</td>${adm?(x.rec?"<td></td>":`<td style="white-space:nowrap"><button class="rm" style="color:var(--mute)" data-nked="item" data-id="${x.id}" title="Upravit">✎</button><button class="rm" data-nkdel="item" data-id="${x.id}" title="Smazat">×</button></td>`):""}</tr>`).join("") : `<tr><td colspan="5" style="text-align:left;color:var(--mute)">Žádné výdaje podle filtru.</td></tr>`);
+  $("nkTn").textContent = rows.length ? "Zobrazeno "+Math.min(rows.length,300)+" z "+rows.length+" záznamů, dohromady "+fmt(sum(rows))+"." : "";
+  document.querySelectorAll("#sec-nak [data-nkdel]").forEach(b=>b.onclick=()=>nkDelete(b.dataset.nkdel,b.dataset.id));
+  document.querySelectorAll("#sec-nak [data-nked]").forEach(b=>b.onclick=()=>openNakEdit(b.dataset.nked,b.dataset.id));
+}
+function nkDelete(kind,id){ const N = nkClone(), k = kind === "rec" ? "recurring" : "items"; N.expenses[k] = N.expenses[k].filter(x=>x.id !== id); saveData(N,$("nkMsg")); }
+function nkCats(){ const u = new Set(NK_CATS); const X = DATA.expenses || {}; (X.items||[]).forEach(x=>x.cat && u.add(x.cat)); (X.recurring||[]).forEach(x=>x.cat && u.add(x.cat)); return [...u]; }
+function nkForm(kind,item){
+  const L = (l,i) => `<label>${l}${i}</label>`, ed = !!item, it = item || {}, isRec = kind === "rec";
+  const dl = `<datalist id="nkCl">${nkCats().map(c=>`<option value="${c}">`).join("")}</datalist>`;
+  const item_ = `<h3 class="h3">${ed&&!isRec?"Upravit výdaj":"Výdaj"}</h3><div class="ctl">${L("Datum",`<input type="date" id="n_d" value="${it.date||nkToday()}">`)}${L("Částka (Kč)",`<input type="number" step="0.01" min="0" id="n_a" value="${!isRec&&it.amount!=null?it.amount:""}">`)}${L("Kategorie",`<input list="nkCl" id="n_c" value="${!isRec?(it.cat||""):""}" placeholder="např. Jídlo">`)}${L("Poznámka",`<input id="n_n" value="${!isRec?(it.note||"").replace(/"/g,"&quot;"):""}" placeholder="volitelné">`)}</div><input type="hidden" id="n_id" value="${!isRec&&ed?it.id:""}"><button class="btn" id="n_add">${ed&&!isRec?"Uložit změnu":"Přidat výdaj"}</button>`;
+  const rec_ = `<h3 class="h3">${ed&&isRec?"Upravit pravidelnou platbu":"Pravidelná měsíční platba"}</h3><p class="hint" style="margin:0 0 6px">Nájem, hypotéka, pojištění, předplatné: zadáš jednou, počítá se každý měsíc od data „od“ (do data „do“, pokud je vyplněno).</p><div class="ctl">${L("Název",`<input id="r_n" value="${isRec?(it.name||"").replace(/"/g,"&quot;"):""}">`)}${L("Částka měsíčně (Kč)",`<input type="number" step="0.01" min="0" id="r_a" value="${isRec&&it.amount!=null?it.amount:""}">`)}${L("Kategorie",`<input list="nkCl" id="r_c" value="${isRec?(it.cat||""):""}">`)}${L("Od",`<input type="date" id="r_f" value="${isRec?(it.from||nkToday()):nkToday()}">`)}${L("Do (volitelné)",`<input type="date" id="r_t" value="${isRec?(it.to||""):""}">`)}</div><input type="hidden" id="r_id" value="${isRec&&ed?it.id:""}"><button class="btn" id="r_add">${ed&&isRec?"Uložit změnu":"Přidat pravidelnou platbu"}</button>`;
+  const rest = ed ? "" : `<h3 class="h3">Hromadné vložení</h3><details><summary>Vložit víc výdajů najednou</summary><p class="hint">Jeden výdaj na řádek: <code>datum; částka; kategorie; poznámka</code>, např. <code>3.11.2026; 450; Jídlo; Albert</code>. Funguje i vložení z Excelu (oddělené tabulátorem).</p><textarea id="n_bulk" rows="5"></textarea><button class="btn" id="n_bulkGo" style="margin-top:6px">Vložit</button></details><h3 class="h3">Měsíční rozpočet</h3><div class="ctl">${L("Rozpočet na měsíc (Kč)",`<input type="number" min="0" step="100" id="n_bud" value="${(DATA.expenses&&DATA.expenses.budget)||""}">`)}</div><button class="btn" id="n_budGo">Uložit rozpočet</button>`;
+  return `<button class="x" onclick="$('dlg').close()">Zavřít</button><h2>Náklady: ${ed?"úprava":"přidat údaje"}</h2>${dl}${isRec&&ed?"":item_}${(!ed||isRec)?rec_:""}${rest}<p class="hint" id="nkOut"></p>`;
+}
+function nkBind(){
+  const v = id => { const x = $(id); return x && x.value.trim() !== "" ? x.value.trim() : null; }, n = id => { const x = v(id); return x == null ? null : +x; }, out = () => $("nkOut");
+  if ($("n_add")) $("n_add").onclick = () => { const d = v("n_d"), a = n("n_a"); if (!d || a == null || !(a >= 0)) { out().textContent = "Doplň datum a částku."; return; }
+    const N = nkClone(), id = v("n_id"), o = { id:id || nkId(), date:d, amount:a, cat:v("n_c") || "Ostatní" }; if (v("n_n")) o.note = v("n_n");
+    N.expenses.items = id ? N.expenses.items.map(x=>x.id === id ? o : x) : N.expenses.items.concat([o]);
+    saveData(N,out()); if (!id) { $("n_a").value = ""; $("n_n").value = ""; $("n_a").focus(); } else setTimeout(()=>$("dlg").close(),600); };
+  if ($("r_add")) $("r_add").onclick = () => { const nm = v("r_n"), a = n("r_a"), f = v("r_f"); if (!nm || a == null || !f) { out().textContent = "Doplň název, částku a datum od."; return; }
+    const N = nkClone(), id = v("r_id"), o = { id:id || nkId(), name:nm, amount:a, cat:v("r_c") || "Ostatní", from:f }; if (v("r_t")) o.to = v("r_t");
+    N.expenses.recurring = id ? N.expenses.recurring.map(x=>x.id === id ? o : x) : N.expenses.recurring.concat([o]); saveData(N,out()); if (id) setTimeout(()=>$("dlg").close(),600); };
+  if ($("n_budGo")) $("n_budGo").onclick = () => { const N = nkClone(); N.expenses.budget = n("n_bud"); saveData(N,out()); };
+  if ($("n_bulkGo")) $("n_bulkGo").onclick = () => { const lines = ($("n_bulk").value||"").split(/\r?\n/).map(s=>s.trim()).filter(Boolean), add = [], bad = [];
+    lines.forEach(l=>{ const p = l.split(/[;\t]/).map(s=>s.trim()); let d = p[0], m; if ((m = d.match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})$/))) d = m[3]+"-"+pad2(+m[2])+"-"+pad2(+m[1]);
+      const a = parseFloat((p[1]||"").replace(/\s/g,"").replace(",",".")); if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !isFinite(a)) { bad.push(l); return; }
+      const o = { id:nkId(), date:d, amount:a, cat:p[2] || "Ostatní" }; if (p.slice(3).join("; ")) o.note = p.slice(3).join("; "); add.push(o); });
+    if (!add.length) { out().textContent = "Nenašel jsem žádný platný řádek."; return; }
+    const N = nkClone(); N.expenses.items = N.expenses.items.concat(add); saveData(N,out()); $("n_bulk").value = bad.join("\n");
+    out().textContent = "Vloženo "+add.length+" výdajů."+(bad.length?" "+bad.length+" řádků se nepodařilo přečíst, nechal jsem je v poli.":""); };
+}
+function openNakEdit(kind,id){ let it = null; if (kind) { const X = DATA.expenses || {}; it = (kind === "rec" ? X.recurring : X.items || []).find(x=>x.id === id) || null; }
+  openDlg(nkForm(kind,it),nkBind); if (!it && $("n_a")) $("n_a").focus(); }
 function showSec(sec){
-  document.body.classList.toggle("sec-el",sec === "el");
+  document.body.classList.toggle("sec-el",sec === "el"); document.body.classList.toggle("sec-nak",sec === "nak");
   document.querySelectorAll("#topnav button").forEach(b=>b.classList.toggle("on",b.dataset.sec === sec));
-  $("h1").textContent = sec === "el" ? "Elektřina" : "Moje investice"; $("eyebrow").textContent = sec === "el" ? "Spotřeba a náklady" : "Osobní přehled";
+  $("h1").textContent = sec === "el" ? "Elektřina" : sec === "nak" ? "Náklady" : "Moje investice"; $("eyebrow").textContent = sec === "el" ? "Spotřeba a náklady" : sec === "nak" ? "Výdaje domácnosti" : "Osobní přehled";
   try { sessionStorage.setItem("inv_sec",sec); } catch(e){}
   window.scrollTo({top:0});
-  requestAnimationFrame(()=>{ [...charts,mktChart,projChart,mortChart,elChart].forEach(c=>c && c.resize && c.resize()); });
+  requestAnimationFrame(()=>{ [...charts,...nkCharts,mktChart,projChart,mortChart,elChart].forEach(c=>c && c.resize && c.resize()); });
 }
 
 async function init(){
@@ -1124,9 +1267,10 @@ async function init(){
   document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
   { const h = location.hash.slice(1); let t = ["prehled","trhy","kovy","plany","hypoteka"].includes(h) ? h : null; if (!t) { try { t = sessionStorage.getItem("inv_tab"); } catch(e){} } showTab(t || "prehled"); }
   $("bElEdit").onclick = () => isUnlocked() ? openElEdit() : askPw(openElEdit);
+  $("bNakEdit").onclick = () => isUnlocked() ? openNakEdit() : askPw(openNakEdit);
   document.querySelectorAll("#topnav button").forEach(b=>b.onclick=()=>showSec(b.dataset.sec));
   elInit();
-  { let sec = location.hash.slice(1) === "elektrina" ? "el" : null; if (!sec) { try { sec = sessionStorage.getItem("inv_sec"); } catch(e){} } showSec(sec === "el" ? "el" : "inv"); }
+  { const h = location.hash.slice(1); let sec = h === "elektrina" ? "el" : h === "naklady" ? "nak" : null; if (!sec) { try { sec = sessionStorage.getItem("inv_sec"); } catch(e){} } showSec(["el","nak"].includes(sec) ? sec : "inv"); }
   $("pm").value = DATA.gg.monthly; $("tm").value = DATA.tax.dpsMonthly; $("td").value = DATA.tax.dipMonthly; $("te").value = DATA.tax.dipEmployerMonthly||0;
   ["pm","pg"].forEach(id=>$(id).addEventListener("input",projUpdate));
   ["tm","td","te","tr"].forEach(id=>$(id).addEventListener("input",taxUpdate));
