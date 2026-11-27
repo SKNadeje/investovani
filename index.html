@@ -224,6 +224,9 @@ footer{font-family:var(--serif);font-style:italic;font-size:.88rem;border-top:1p
 .cards>.card{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
 .cards>.card:nth-child(2){animation-delay:.05s}.cards>.card:nth-child(3){animation-delay:.1s}.cards>.card:nth-child(4){animation-delay:.15s}.cards>.card:nth-child(5){animation-delay:.2s}.cards>.card:nth-child(6){animation-delay:.25s}.cards>.card:nth-child(7){animation-delay:.3s}
 ::selection{background:color-mix(in srgb,var(--gold) 35%,transparent)}
+
+.upd{font-size:.74rem;color:var(--mute);margin-top:6px;letter-spacing:.01em}
+.upd.dep{margin-top:2px;color:var(--ink)}.upd.dep b{color:var(--up);font-weight:600}
 </style>
 </head>
 <body>
@@ -478,24 +481,31 @@ function render(p){
     ? "Živé ceny (spot): zlato " + fmt(p.usd.XAU*p.fx) + " / oz, stříbro " + fmt((p.usd.XAG||0)*p.fx) + " / oz, kurz " + p.fx.toFixed(2).replace(".",",") + " Kč/USD." + (DATA.metals.some(m=>m.premium) ? " Ocenění s přirážkou: "+DATA.metals.filter(m=>m.premium).map(m=>m.name.toLowerCase()+" "+pct(m.premium)).join(", ")+"." : "") + (p.usd.XAU>0 && p.usd.XAG>0 ? " Poměr zlato/stříbro " + num(p.usd.XAU/p.usd.XAG,1) + "." : "")
     : "Živé ceny se nepodařilo načíst, zlato a stříbro jsou zatím oceněny nákupní cenou.";
 
+  const dshort = d => new Date(d).toLocaleDateString("cs-CZ",{day:"numeric",month:"numeric",year:"numeric"});
+  const itemInfo = id => { let upd = null, dep = null, prev = null;
+    [...(DATA.snapshots||[])].sort((x,y)=>x.date.localeCompare(y.date)).forEach(sn=>{ const it = sn.items && sn.items[id]; if (!it) return; upd = sn.date;
+      if (it.deposits!=null) { if (prev!=null && it.deposits > prev + 0.5) dep = { date:sn.date, delta:it.deposits-prev }; prev = it.deposits; } });
+    return { upd, dep }; };
+  const updLine = id => { const i = itemInfo(id); if (!i.upd) return "";
+    return `<div class="upd">Aktualizováno ${dshort(i.upd)}</div>` + (i.dep ? `<div class="upd dep">Poslední vklad <b>+${fmt(i.dep.delta)}</b> · ${dshort(i.dep.date)}</div>` : ""); };
   const card = (it,total) => {
     const dep = it.deposits, d = dep==null ? null : it.value-dep;
     const sub = total ? `<div class="chg ${cls(kV-kD)}">Zisk ${sg(kV-kD)} (${pct((kV-kD)/kD*100)})</div><div class="hint">z vložených ${fmt(kD)}${mine.some(a=>a.deposits==null)?". Bez položek, jejichž vklady neznám ("+fmt(totalVal-kV)+")":""}.</div>`
       : dep==null ? `<div class="chg" style="color:var(--mute)">vklady neznámé</div>`
       : `<div class="chg ${cls(d)}">${sg(d)} (${pct(d/dep*100)})</div>`;
-    const inner = `<div class="name"><span class="dot" style="background:${it.color}"></span>${it.name}${it.exclude?" (mimo celkem)":""}</div><div class="big">${fmt(it.value)}</div>${sub}${trend(it.id||"total",it.value,it.color||V("--ink"))}`;
+    const inner = `<div class="name"><span class="dot" style="background:${it.color}"></span>${it.name}${it.exclude?" (mimo celkem)":""}</div><div class="big">${fmt(it.value)}</div>${sub}${trend(it.id||"total",it.value,it.color||V("--ink"))}${total ? `<div class="hint">Poslední aktualizace dat: ${dshort(DATA.updated)}</div>` : updLine(it.id)}`;
     return total ? `<button class="card total" data-total="1">${inner}</button>` : `<button class="card" data-id="${it.id}" style="--c:${it.color}">${inner}</button>`;
   };
   const Mg = DATA.mortgage || {};
-  const mcard = Mg.balance>0 ? `<button class="card" data-scroll="mortgage" style="--c:#b23a2e"><div class="name"><span class="dot" style="background:#b23a2e"></span>Hypotéka</div><div class="big">${fmt(Mg.balance)}</div><div class="chg" style="color:var(--mute)">${Mg.payment?fmt(Mg.payment)+" měsíčně":"zbývá splatit"}${Mg.rate!=null?", úrok "+num(Mg.rate,2)+" %":""}</div></button>` : "";
+  const mcard = Mg.balance>0 ? `<button class="card" data-scroll="mortgage" style="--c:#b23a2e"><div class="name"><span class="dot" style="background:#b23a2e"></span>Hypotéka</div><div class="big">${fmt(Mg.balance)}</div><div class="chg" style="color:var(--mute)">${Mg.payment?fmt(Mg.payment)+" měsíčně":"zbývá splatit"}${Mg.rate!=null?", úrok "+num(Mg.rate,2)+" %":""}</div>${Mg.asOf?`<div class="upd">Aktualizováno ${dshort(Mg.asOf)}</div>`:""}</button>` : "";
   $("cards").innerHTML = card({name:"Celkem",color:"#e8c46a",value:totalVal},true) + ITEMS.map(a=>card(a)).join("") + mcard;
   $("cards").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.total ? showTotal() : b.dataset.scroll ? showTab("hypoteka") : showItem(b.dataset.id));
 
-  $("table").innerHTML = `<tr><th>Položka</th><th>Vloženo</th><th>Hodnota</th><th>Zisk</th><th>Výnos</th><th>Podíl</th></tr>` +
+  $("table").innerHTML = `<tr><th>Položka</th><th>Vloženo</th><th>Hodnota</th><th>Zisk</th><th>Výnos</th><th>Podíl</th><th>Aktualizace</th><th>Poslední vklad</th></tr>` +
     ITEMS.map(a=>{ const d=a.deposits, pr=d==null?null:a.value-d, c=pr==null?"":cls(pr);
       return `<tr class="click" data-id="${a.id}"><td>${a.name}${a.note||""}${a.exclude?" (mimo celkem)":""}</td><td>${d==null?"—":fmt(d)}</td><td>${fmt(a.value)}</td>
-      <td class="${c}">${pr==null?"—":sg(pr)}</td><td class="${c}">${pr==null?"—":pct(pr/d*100)}</td><td>${a.exclude?"—":num(a.value/totalVal*100,0)+" %"}</td></tr>`; }).join("") +
-    `<tr><td><b>Celkem</b></td><td></td><td><b>${fmt(totalVal)}</b></td><td colspan="3"></td></tr>`;
+      <td class="${c}">${pr==null?"—":sg(pr)}</td><td class="${c}">${pr==null?"—":pct(pr/d*100)}</td><td>${a.exclude?"—":num(a.value/totalVal*100,0)+" %"}</td><td>${(()=>{const i=itemInfo(a.id);return i.upd?dshort(i.upd):"—"})()}</td><td>${(()=>{const i=itemInfo(a.id);return i.dep?`+${fmt(i.dep.delta)} <span class="hint">(${dshort(i.dep.date)})</span>`:"—"})()}</td></tr>`; }).join("") +
+    `<tr><td><b>Celkem</b></td><td></td><td><b>${fmt(totalVal)}</b></td><td colspan="5"></td></tr>`;
   $("table").querySelectorAll("tr.click").forEach(r=>r.onclick=()=>showItem(r.dataset.id));
 
   mk(charts,"barChart",{ type:"bar", data:{labels:known.map(a=>a.name),datasets:[
