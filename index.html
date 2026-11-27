@@ -1276,7 +1276,7 @@ function nkBind(){
     out().textContent = "Vloženo "+add.length+" výdajů."+(bad.length?" "+bad.length+" řádků se nepodařilo přečíst, nechal jsem je v poli.":""); };
 }
 function openNakEdit(kind,id){ let it = null; if (kind) { const X = DATA.expenses || {}; it = (kind === "rec" ? X.recurring : X.items || []).find(x=>x.id === id) || null; }
-  openDlg(nkForm(kind,it),nkBind); if (!it && $("n_a")) $("n_a").focus(); }
+  openDlg(nkForm(kind,it),nkBind); nakRender(); if (!it && $("n_a")) $("n_a").focus(); }
 function showSec(sec){
   document.body.classList.toggle("sec-el",sec === "el"); document.body.classList.toggle("sec-nak",sec === "nak");
   document.querySelectorAll("#topnav button").forEach(b=>b.classList.toggle("on",b.dataset.sec === sec));
