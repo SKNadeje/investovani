@@ -645,7 +645,7 @@
    "items": {
     "edward": {
      "value": 20300.9,
-     "deposits": 20000.0
+     "deposits": 20000
     },
     "penze": {
      "value": 162853.44,
@@ -660,7 +660,7 @@
    "items": {
     "edward": {
      "value": 348333.66,
-     "deposits": 321900.0
+     "deposits": 321900
     },
     "penze": {
      "value": 217228.14,
@@ -674,8 +674,8 @@
    "total": null,
    "items": {
     "edward": {
-     "value": 343924.0,
-     "deposits": 302660.0
+     "value": 343924,
+     "deposits": 302660
     },
     "penze": {
      "value": 260628.13,
@@ -802,51 +802,51 @@
   "history": [
    {
     "date": "2024-11-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2024-12-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-01-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-02-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-03-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-04-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-05-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-06-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-07-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-08-28",
-    "balance": 4170000.0
+    "balance": 4170000
    },
    {
     "date": "2025-09-30",
-    "balance": 3127500.0
+    "balance": 3127500
    },
    {
     "date": "2025-10-31",
-    "balance": 3127500.0
+    "balance": 3127500
    },
    {
     "date": "2025-11-30",
@@ -896,7 +896,7 @@
   "propertyArea": 82,
   "propertyNote": "byt po kompletní rekonstrukci, 82 m², Trutnov – Krýblice"
  },
- "_rev": "2026-11-26T05:28:18.225Z",
+ "_rev": "2026-11-27T10:49:51.146Z",
  "electricity": {
   "meta": {
    "supplier": "Centropol Energy",
@@ -1013,5 +1013,17 @@
     "note": "přeplatek 957 Kč"
    }
   ]
+ },
+ "expenses": {
+  "items": [
+   {
+    "id": "mwyv0lrdz8gd",
+    "date": "2026-11-27",
+    "amount": 1000,
+    "cat": "Děti",
+    "note": "Atletika"
+   }
+  ],
+  "recurring": []
  }
 }
