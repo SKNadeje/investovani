@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#10243a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%AA%99%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{--bg:#eef1f4;--card:#fff;--ink:#1b2733;--mute:#66758a;--line:#dbe1e8;--up:#1e7a52;--down:#b23a2e;--gold:#c9a227}
@@ -156,6 +156,73 @@ body:not(.sec-el) #sec-el,body:not(.sec-el) .only-el{display:none}
  #tab-prehled>#vyvoj{grid-column:1/-1}
  #tab-plany>#projekce,#tab-plany>#dane{grid-column:span 6}
 }
+
+/* ===== vzhled v4: elegantní editorial ===== */
+:root{--bg:#f6f3ec;--card:#fffdf9;--ink:#15202b;--mute:#6f7782;--line:#e8e2d5;--gold:#a67f2e;--gold2:#d4b061;--navy:#0f2233;--up:#1d7a53;--down:#b03a2e;--r:18px;
+ --sh:0 1px 0 rgba(255,255,255,.8) inset,0 1px 2px rgba(15,34,51,.04),0 18px 40px -26px rgba(15,34,51,.28);--serif:"Fraunces",Georgia,"Times New Roman",serif}
+@media(prefers-color-scheme:dark){:root{--bg:#0b121b;--card:#121c28;--ink:#ece8de;--mute:#93a0b0;--line:#223142;--gold:#d6b165;--gold2:#e9cf94;--navy:#0f2233;--up:#5bc795;--down:#ee8174;--sh:0 1px 0 rgba(255,255,255,.03) inset,0 20px 44px -28px rgba(0,0,0,.7)}}
+body{background:var(--bg);background-image:radial-gradient(900px 420px at 100% -10%,color-mix(in srgb,var(--gold) 13%,transparent),transparent 65%);background-attachment:fixed;letter-spacing:.003em;-webkit-font-smoothing:antialiased}
+h1,h2,.big,.h3{font-family:var(--serif);font-weight:500;letter-spacing:-.015em;font-variation-settings:"opsz" 96}
+h1{font-weight:400;letter-spacing:-.03em}
+.eyebrow{color:var(--gold);letter-spacing:.28em;font-weight:500;font-size:.72rem}
+.hero .sub{font-family:var(--serif);font-style:italic;font-size:1.05rem;color:var(--mute)}
+.status{font-size:.8rem}
+/* navigace */
+.nav{background:color-mix(in srgb,var(--bg) 86%,transparent);border-bottom:1px solid var(--line);gap:6px}
+.nav button{border:0;background:transparent;border-radius:0;padding:10px 16px;font-weight:500;font-size:.92rem;color:var(--mute);position:relative}
+.nav button:hover{color:var(--ink)}
+.nav button.on{background:transparent!important;color:var(--ink)!important}
+.nav button.on::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.bigseg button{font-family:var(--serif);font-size:1.02rem;padding:8px 22px}
+.seg{gap:4px;padding:3px;border:1px solid var(--line);border-radius:999px;display:inline-flex;background:color-mix(in srgb,var(--card) 60%,transparent)}
+.seg button{border:0;background:transparent;padding:6px 15px;font-weight:500;color:var(--mute)}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--navy)!important;color:#fff!important;border:0}
+.bigseg{display:inline-flex}
+@media(prefers-color-scheme:dark){.seg button.on{background:var(--gold)!important;color:#0f2233!important}}
+.btn{font-weight:500;padding:9px 20px;background:transparent;border-color:color-mix(in srgb,var(--ink) 22%,transparent)}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+#bRep{background:var(--navy);color:#fff;border-color:var(--navy)}#bRep:hover{background:#1a3550;color:#fff}
+/* karty */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+section.card{padding:26px 28px}
+section.card>h2:first-child{font-size:1.4rem;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line);display:block}
+section.card>h2:first-child::before{display:none}
+.h3{font-size:1.1rem}
+.cards>.card:not(.total)::before{height:2px;opacity:.9}
+.cards>.card:not(.total){padding:20px 22px}
+button.card:hover{transform:translateY(-3px);box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 24px 44px -24px rgba(15,34,51,.35)}
+.name{font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;font-weight:500}
+.big{font-size:1.85rem;font-weight:500;margin:8px 0 4px}
+.chg{font-weight:500;font-size:.86rem}
+.card.total{background:radial-gradient(520px 260px at 100% 0%,rgba(212,176,97,.28),transparent 70%),linear-gradient(135deg,#0b1a28 0%,#12304a 60%,#17475a 100%);border:1px solid rgba(212,176,97,.35);padding:32px 36px}
+.card.total::after{display:none}
+.total .big{font-size:clamp(2.8rem,6vw,4.4rem);font-weight:400;letter-spacing:-.035em}
+.total .name{color:rgba(255,255,255,.7)}
+/* KPI */
+.kpi{background:transparent;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi span{text-transform:uppercase;letter-spacing:.1em;font-size:.68rem;font-weight:500}
+.kpi b{font-family:var(--serif);font-weight:500;font-size:1.25rem;letter-spacing:-.01em;display:block;margin-top:3px}
+/* tabulky */
+th{font-size:.68rem;letter-spacing:.12em;font-weight:500;border-bottom:1px solid color-mix(in srgb,var(--ink) 16%,transparent)}
+td{border-bottom:1px solid var(--line);padding:11px 8px}
+tr:last-child td{border-bottom:0}
+tr.click:hover td{background:color-mix(in srgb,var(--gold) 9%,transparent)}
+.hint{font-size:.8rem}
+.bar{height:6px;border-radius:6px}
+/* formuláře, okna */
+input,select{border-radius:12px;padding:8px 12px;background:var(--card);border-color:var(--line)}
+input:focus,select:focus{outline:2px solid color-mix(in srgb,var(--gold) 45%,transparent);border-color:var(--gold)}
+input[type=range]{accent-color:var(--gold);padding:0}
+.ctl label{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em}
+dialog{border:1px solid var(--line);border-radius:24px;padding:30px}
+.x{border-radius:999px;font-weight:500}
+footer{font-family:var(--serif);font-style:italic;font-size:.88rem;border-top:1px solid var(--line)}
+/* jemné objevení */
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.cards>.card{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+.cards>.card:nth-child(2){animation-delay:.05s}.cards>.card:nth-child(3){animation-delay:.1s}.cards>.card:nth-child(4){animation-delay:.15s}.cards>.card:nth-child(5){animation-delay:.2s}.cards>.card:nth-child(6){animation-delay:.25s}.cards>.card:nth-child(7){animation-delay:.3s}
+::selection{background:color-mix(in srgb,var(--gold) 35%,transparent)}
 </style>
 </head>
 <body>
@@ -285,7 +352,8 @@ let charts = [], dcharts = [];
 function setup(){
   Chart.defaults.font.family = '"Instrument Sans", system-ui, sans-serif';
   Chart.defaults.color = V("--mute"); Chart.defaults.borderColor = V("--line");
-  Chart.defaults.animation.duration = 350; Chart.defaults.elements.bar.borderRadius = 6;
+  Chart.defaults.animation.duration = 350; Chart.defaults.elements.bar.borderRadius = 6; Chart.defaults.elements.line.borderWidth = 2; Chart.defaults.elements.point.hoverRadius = 5; Chart.defaults.elements.bar.borderSkipped = false;
+  try { const T = Chart.defaults.plugins.tooltip; T.backgroundColor = "rgba(15,34,51,.94)"; T.titleColor = "#d4b061"; T.bodyColor = "#fff"; T.padding = 12; T.cornerRadius = 10; T.boxPadding = 5; T.displayColors = true; T.titleFont = {family:'"Fraunces",Georgia,serif',size:13,weight:"500"}; Chart.defaults.scale.grid.color = V("--line"); Chart.defaults.scale.grid.lineWidth = 1; } catch(e){}
   if (Chart.defaults.plugins && Chart.defaults.plugins.legend) { Chart.defaults.plugins.legend.labels.usePointStyle = true; Chart.defaults.plugins.legend.labels.boxWidth = 8; }
 }
 const tick = v => Math.abs(v)>=1000 ? num(v/1000,0)+" tis." : v;
