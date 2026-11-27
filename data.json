@@ -896,7 +896,7 @@
   "propertyArea": 82,
   "propertyNote": "byt po kompletní rekonstrukci, 82 m², Trutnov – Krýblice"
  },
- "_rev": "2026-11-27T18:19:25.033Z",
+ "_rev": "2026-11-27T18:20:42.796Z",
  "electricity": {
   "meta": {
    "supplier": "Centropol Energy",
@@ -1164,6 +1164,39 @@
     "date": "2026-11-09",
     "amount": 154,
     "cat": "Kafe práce"
+   },
+   {
+    "id": "mwzb31wb7a7z",
+    "date": "2026-11-09",
+    "amount": 30,
+    "cat": "Parkování"
+   },
+   {
+    "id": "mwzb3fw3gwwy",
+    "date": "2026-11-09",
+    "amount": 4200,
+    "cat": "Dárky",
+    "note": "Alza"
+   },
+   {
+    "id": "mwzb3twtxmgq",
+    "date": "2026-11-09",
+    "amount": 2500,
+    "cat": "Auto",
+    "note": "Benzín"
+   },
+   {
+    "id": "mwzb412xxirr",
+    "date": "2026-11-09",
+    "amount": 400,
+    "cat": "Tipsport"
+   },
+   {
+    "id": "mwzb4ey4iy04",
+    "date": "2026-11-09",
+    "amount": 499,
+    "cat": "Dárky",
+    "note": "Alza"
    }
   ],
   "recurring": [],
