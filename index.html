@@ -143,9 +143,10 @@ body:not(.sec-el) #sec-el,body:not(.sec-el) .only-el{display:none}
  #sec-el>#elK,#sec-el>#elMsg,#sec-el>footer{grid-column:1/-1}
  #sec-el>#elChartCard{grid-column:1/-1}
  #sec-el #elChart{max-height:400px}
- #sec-el>section.card:nth-of-type(2){grid-column:span 5}
- #sec-el>section.card:nth-of-type(3){grid-column:span 7}
- #sec-el>section.card:nth-of-type(4){grid-column:1/-1}
+ #sec-el>#elYear{grid-column:1/-1}
+ #sec-el>#elStav{grid-column:span 5}
+ #sec-el>#elVyu{grid-column:span 7}
+ #sec-el>#elSml{grid-column:1/-1}
  .kpis{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
  #sec-inv>footer{margin-top:32px}
  dialog{width:min(1040px,92vw)}
@@ -313,9 +314,10 @@ footer{font-family:var(--serif);font-style:italic;font-size:.88rem;border-top:1p
       <div class="chart" style="height:320px"><canvas id="elChart"></canvas></div>
       <p class="hint" id="elNote"></p>
     </section>
-    <section class="card" style="margin-top:16px"><h2>Stavy elektroměru</h2><div class="wrap"><table id="elT"></table></div></section>
-    <section class="card" style="margin-top:16px"><h2>Vyúčtování</h2><div class="wrap"><table id="elS"></table></div></section>
-    <section class="card" style="margin-top:16px"><h2>Smlouva a tarif</h2><div class="kpis" id="elMeta"></div><p class="hint" id="elWarn" style="color:var(--down)"></p><div class="wrap"><table id="elTr"></table></div><div id="elInfo"></div></section>
+    <section class="card" id="elYear"><h2>Roční přehled</h2><div class="wrap"><table id="elY"></table></div><p class="hint" id="elYn"></p></section>
+    <section class="card" id="elStav" style="margin-top:16px"><h2>Stavy elektroměru</h2><div class="wrap"><table id="elT"></table></div></section>
+    <section class="card" id="elVyu" style="margin-top:16px"><h2>Vyúčtování</h2><div class="wrap"><table id="elS"></table></div></section>
+    <section class="card" id="elSml" style="margin-top:16px"><h2>Smlouva a tarif</h2><div class="kpis" id="elMeta"></div><p class="hint" id="elWarn" style="color:var(--down)"></p><div class="wrap"><table id="elTr"></table></div><div id="elInfo"></div></section>
     <p class="hint" id="elMsg"></p>
     <footer>Měsíční spotřeba se dopočítává z rozdílů stavů elektroměru rovnoměrně po dnech, cena je spotřeba krát cena tarifu plus stálé platby. Ceny zadávej včetně DPH a všech složek.</footer>
   </div>
@@ -967,6 +969,16 @@ function elRender(){
     (rd.length ? [...rd].reverse().map(r=>{ const i = ivBy[r.date], st = num(r.v,1) + (r.nt!=null ? " / "+num(r.nt,1) : "") + (r.note ? ` <span class="hint">(${r.note})</span>` : "");
       return `<tr><td>${new Date(r.date).toLocaleDateString("cs-CZ")}</td><td>${st}</td><td>${i ? (i.bad ? '<span class="down">chybný údaj</span>' : num(i.kwh,1)+" kWh") : "—"}</td><td>${i?i.nd:"—"}</td><td>${i&&!i.bad&&i.nd?num(i.kwh/i.nd,1):"—"}</td><td>${i&&i.hasCost?fmt(i.cost):"—"}</td>${rm("readings",r.date)}</tr>`; }).join("")
      : `<tr><td colspan="7" style="text-align:left;color:var(--mute)">Zatím žádné stavy. Klikni nahoře na Přidat údaje.</td></tr>`);
+  // roční přehled (kalendářní roky)
+  { const Y = {}; Object.values(C.mon).forEach(m=>{ const y = Y[m.y] || (Y[m.y] = {kwh:0,cost:0,days:0,hasCost:false}); y.kwh += m.kwh; y.cost += m.cost; y.days += m.days; if (m.hasCost) y.hasCost = true; });
+    const ys = Object.keys(Y).map(Number).sort((a,b)=>b-a), yd = y => (y%4===0&&y%100!==0)||y%400===0 ? 366 : 365;
+    const dl = (a,b) => b ? (a>b?"down":"up") : "";
+    $("elY").innerHTML = ys.length ? `<tr><th>Rok</th><th>Pokryto</th><th>Spotřeba</th><th>Cena</th><th>kWh / den</th><th>Kč / měsíc</th><th>Kč / kWh</th><th>Oproti předchozímu roku</th></tr>` + ys.map(y=>{
+      const r = Y[y], pr = Y[y-1], full = r.days >= yd(y)-1, kd = r.kwh/r.days, cd = r.cost/r.days, pk = pr ? pr.kwh/pr.days : null, pc = pr ? pr.cost/pr.days : null;
+      const chg = (x,p) => p ? `<span class="${x>p?"down":"up"}">${x>=p?"+":"−"}${num(Math.abs(x/p-1)*100,1)} %</span>` : "—";
+      return `<tr><td><b>${y}</b></td><td>${full ? "celý rok" : r.days+" dní"}</td><td>${num(r.kwh,0)} kWh</td><td>${r.hasCost ? fmt(r.cost) : "—"}</td><td>${num(kd,1)}</td><td>${r.hasCost ? fmt(cd*30.44) : "—"}</td><td>${r.hasCost && r.kwh ? num(r.cost/r.kwh,2)+" Kč" : "—"}</td><td>${pr ? "spotřeba "+chg(kd,pk)+(r.hasCost&&pr.hasCost ? ", cena "+chg(cd,pc) : "") : "—"}</td></tr>`; }).join("")
+      : `<tr><td style="text-align:left;color:var(--mute)">Zatím nejsou data.</td></tr>`;
+    $("elYn").textContent = ys.length ? "Roky, které nejsou pokryté celé, se s předchozím rokem srovnávají v přepočtu na den. Kč / měsíc je průměr včetně stálých plateb. Údaje vycházejí ze stavů elektroměru, ne z vyúčtování." : ""; }
   const stm = [...(E.statements||[])].sort((a,b)=>b.to.localeCompare(a.to));
   $("elS").innerHTML = `<tr><th>Období</th><th>Spotřeba</th><th>Vyúčtováno</th><th>Zálohy</th><th>Přeplatek / nedoplatek</th><th>Kč / kWh</th>${adm?"<th></th>":""}</tr>` +
     (stm.length ? stm.map(x=>{ const d = x.paid!=null ? x.paid-x.cost : null;
